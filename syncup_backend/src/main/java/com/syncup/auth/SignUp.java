@@ -1,18 +1,23 @@
 package com.syncup.auth;
 
-import com.syncup.database.JdbcConnector;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.UUID;
 
+import com.syncup.auth.validator.RegistrationValidator;
+import com.syncup.database.JdbcConnector;
+
 public class SignUp {
 
     public boolean registerUser(String username, String email, String password) {
 
-        String hashedPassword = PasswordHash.hash(password);
+        // Validate input
+        if (!RegistrationValidator.validate(username, email, password)) {
+            return false;
+        }
 
+        String hashedPassword = PasswordHash.hash(password);
         UUID userId = UUID.randomUUID();
 
         String sql

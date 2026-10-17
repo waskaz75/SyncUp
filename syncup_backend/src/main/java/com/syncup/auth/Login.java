@@ -6,12 +6,18 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
+import com.syncup.auth.validator.LoginValidator;
 import com.syncup.database.JdbcConnector;
 import com.syncup.model.User;
 
 public class Login {
 
     public User login(String email, String password) {
+
+        // Validate email
+        if (!LoginValidator.validate(email, password)) {
+            return null;
+        }
 
         String sql
                 = "SELECT user_id, username, email, password_hash "
@@ -24,7 +30,8 @@ public class Login {
             ResultSet rs = stmt.executeQuery();
 
             if (!rs.next()) {
-                return null; // email not found
+                System.out.println("Error: Email not found");
+                return null;
             }
 
             String storedHash = rs.getString("password_hash");
@@ -33,7 +40,8 @@ public class Login {
             boolean matches = PasswordHash.verify(password, storedHash);
 
             if (!matches) {
-                return null; // wrong password
+                System.out.println("Error: Incorrect password");
+                return null;
             }
 
             return new User(

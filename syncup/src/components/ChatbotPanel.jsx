@@ -70,7 +70,7 @@ function ChatbotPanel({ onSetBackground }) {
     const downloadLink = document.createElement("a");
 
     downloadLink.href = imageUrl;
-    downloadLink.download = "syncup-generated-background.svg";
+    downloadLink.download = "syncup-generated-background.png";
 
     document.body.append(downloadLink);
     downloadLink.click();

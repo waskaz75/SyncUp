@@ -74,8 +74,7 @@ export function sanitizeBackgroundSource(source) {
   if (
     value.startsWith("data:image/png") ||
     value.startsWith("data:image/jpeg") ||
-    value.startsWith("data:image/webp") ||
-    value.startsWith("data:image/svg+xml")
+    value.startsWith("data:image/webp")
   ) {
     return value;
   }
@@ -102,25 +101,33 @@ export async function generateBackgroundImage(prompt) {
     window.setTimeout(resolve, 900);
   });
 
-  const safePrompt = prompt
-    .slice(0, 42)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+  const safePrompt = prompt.slice(0, 42);
+  const canvas = document.createElement("canvas");
+  canvas.width = 1600;
+  canvas.height = 900;
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-label="Generated background">
-  <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#7656b7"/>
-      <stop offset="50%" stop-color="#d27fc0"/>
-      <stop offset="100%" stop-color="#332b50"/>
-    </linearGradient>
-  </defs>
-  <rect width="1600" height="900" fill="url(#bg)"/>
-  <text x="50%" y="50%" text-anchor="middle" fill="#ffffff" font-size="58" font-family="DM Sans, Arial, sans-serif" font-weight="700">${safePrompt}</text>
-</svg>`;
+  const context = canvas.getContext("2d");
+  if (!context) {
+    return DEFAULT_BACKGROUND_SRC;
+  }
 
-  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+  const gradient = context.createLinearGradient(0, 0, 1600, 900);
+  gradient.addColorStop(0, "#7656b7");
+  gradient.addColorStop(0.5, "#d27fc0");
+  gradient.addColorStop(1, "#332b50");
+
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, 1600, 900);
+
+  context.fillStyle = "rgba(255, 255, 255, 0.22)";
+  context.beginPath();
+  context.arc(220, 150, 180, 0, Math.PI * 2);
+  context.fill();
+
+  context.fillStyle = "#ffffff";
+  context.font = "700 60px DM Sans, sans-serif";
+  context.textAlign = "center";
+  context.fillText(safePrompt, 800, 470);
+
+  return canvas.toDataURL("image/png");
 }

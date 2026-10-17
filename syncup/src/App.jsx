@@ -1,984 +1,690 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap");
-
-:root {
-  font-family: "DM Sans", sans-serif;
-  color: #29243d;
-  background: #f8f5fb;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-button,
-input {
-  font: inherit;
-}
-
-button {
-  cursor: pointer;
-}
-
-.auth-layout {
-  min-height: 100vh;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  background: #fbf9fd;
-}
-
-.brand-panel {
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 8vw;
-  color: white;
-  background:
-    radial-gradient(circle at 15% 20%, rgba(255, 184, 226, 0.7), transparent 28%),
-    radial-gradient(circle at 80% 80%, rgba(133, 103, 238, 0.55), transparent 32%),
-    linear-gradient(145deg, #7556b9, #a969bd 50%, #e49acb);
-}
-
-.brand-panel::after {
-  content: "";
-  position: absolute;
-  width: 420px;
-  height: 420px;
-  right: -170px;
-  top: -120px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 50%;
-  box-shadow:
-    0 0 0 30px rgba(255, 255, 255, 0.06),
-    0 0 0 60px rgba(255, 255, 255, 0.04);
-}
-
-.brand-mark {
-  position: relative;
-  z-index: 1;
-  width: 56px;
-  height: 56px;
-  display: grid;
-  place-items: center;
-  margin-bottom: 42px;
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  border-radius: 17px;
-  font-family: "Playfair Display", serif;
-  font-size: 30px;
-  font-weight: 700;
-  background: rgba(255, 255, 255, 0.16);
-  backdrop-filter: blur(10px);
-}
-
-.brand-mark.small {
-  width: 38px;
-  height: 38px;
-  margin: 0;
-  border-radius: 12px;
-  font-size: 22px;
-  color: white;
-}
-
-.eyebrow {
-  margin: 0 0 15px;
-  color: #a646cb;
-  font-size: 19px;
-  font-weight: 900;
-  letter-spacing: 0.18em;
-}
-
-.brand-panel .eyebrow {
-  color: #f9d8ef;
-}
-
-.brand-panel h1 {
-  position: relative;
-  z-index: 1;
-  max-width: 560px;
-  margin: 0;
-  font-family: "Playfair Display", serif;
-  font-size: clamp(38px, 4vw, 68px);
-  line-height: 1.08;
-  letter-spacing: -0.04em;
-}
-
-.brand-description {
-  position: relative;
-  z-index: 1;
-  max-width: 450px;
-  margin: 28px 0 0;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 18px;
-  line-height: 1.7;
-}
-
-.brand-stat-row {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  gap: 52px;
-  margin-top: 68px;
-}
-
-.brand-stat-row div {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.brand-stat-row strong {
-  font-size: 20px;
-}
-
-.brand-stat-row span {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 17px;
-}
-
-.form-panel {
-  display: grid;
-  place-items: center;
-  padding: 40px 7vw;
-}
-
-.form-card {
-  width: 100%;
-  max-width: 430px;
-}
-
-.mobile-brand {
-  display: none;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 48px;
-  color: #332b50;
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.mobile-brand .brand-mark {
-  background: linear-gradient(135deg, #7658b8, #d783c2);
-}
-
-.form-heading h2 {
-  margin: 0;
-  color: #29243d;
-  font-family: "Playfair Display", serif;
-  font-size: 38px;
-  line-height: 1.1;
-  letter-spacing: -0.04em;
-}
-
-.form-heading p:last-child {
-  margin: 14px 0 0;
-  color: #8b8499;
-  font-size: 14px;
-}
-
-.mode-switcher {
-  display: flex;
-  gap: 28px;
-  margin: 38px 0 26px;
-  border-bottom: 1px solid #e9e3ef;
-}
-
-.mode-switcher button {
-  position: relative;
-  padding: 0 0 14px;
-  border: 0;
-  color: #aaa2b5;
-  background: transparent;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.mode-switcher button.active {
-  color: #7152b6;
-}
-
-.mode-switcher button.active::after {
-  content: "";
-  position: absolute;
-  right: 0;
-  bottom: -1px;
-  left: 0;
-  height: 2px;
-  border-radius: 2px;
-  background: #9d66c7;
-}
-
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-label {
-  margin-top: 8px;
-  color: #4b4559;
-  font-size: 15px;
-  font-weight: 700;
-}
-
-input {
-  width: 100%;
-  padding: 14px 15px;
-  border: 1px solid #e5deeb;
-  border-radius: 10px;
-  outline: none;
-  color: #322d42;
-  background: #fff;
-  transition: 0.2s ease;
-}
-
-input::placeholder {
-  color: #b7b0c0;
-}
-
-input:focus {
-  border-color: #a86dca;
-  box-shadow: 0 0 0 4px rgba(168, 109, 202, 0.12);
-}
-
-.label-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 8px;
-}
-
-.label-row label {
-  margin: 0;
-}
-
-.text-button,
-.back-button {
-  padding: 0;
-  border: 0;
-  color: #8e5fc1;
-  background: transparent;
-  font-size: 12px;
-}
-
-.primary-button {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  margin-top: 22px;
-  padding: 15px 18px;
-  border: 0;
-  border-radius: 10px;
-  color: white;
-  background: linear-gradient(100deg, #7655b7, #d27fc0);
-  box-shadow: 0 12px 22px rgba(121, 82, 180, 0.2);
-  font-weight: 700;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.primary-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 15px 25px rgba(121, 82, 180, 0.28);
-}
-
-.primary-button span {
-  font-size: 20px;
-  line-height: 12px;
-}
-
-.message {
-  margin: 12px 0;
-  padding: 12px 14px;
-  border-radius: 9px;
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-.message.error {
-  border: 1px solid #f0c7d2;
-  color: #a44b61;
-  background: #fff3f6;
-}
-
-.message.success {
-  border: 1px solid #cce7d8;
-  color: #377957;
-  background: #f0fbf4;
-}
-
-.security-note {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  margin-top: 30px;
-  color: #7f7390;
-  font-size: 13px;
-}
-
-.security-note span {
-  color: #b170c8;
-}
-
-.centered-layout {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 30px;
-  background:
-    radial-gradient(circle at 15% 10%, rgba(231, 175, 226, 0.35), transparent 28%),
-    linear-gradient(135deg, #f6f0fb, #fff8fc);
-}
-
-.verification-card {
-  width: 100%;
-  max-width: 430px;
-  padding: 48px;
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.76);
-  box-shadow: 0 22px 70px rgba(96, 65, 132, 0.12);
-  text-align: center;
-  backdrop-filter: blur(20px);
-}
-
-.verification-icon {
-  width: 64px;
-  height: 64px;
-  display: grid;
-  place-items: center;
-  margin: 0 auto 28px;
-  border-radius: 19px;
-  color: white;
-  background: linear-gradient(135deg, #7655b7, #d27fc0);
-  font-size: 26px;
-}
-
-.verification-card h1 {
-  margin: 0;
-  font-family: "Playfair Display", serif;
-  font-size: 38px;
-  letter-spacing: -0.04em;
-}
-
-.verification-description {
-  margin: 15px 0 30px;
-  color: #888094;
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-.verification-card form {
-  text-align: left;
-}
-
-.code-input {
-  text-align: center;
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: 0.32em;
-}
-
-.back-button {
-  margin-top: 24px;
-}
-
-.demo-hint {
-  margin: 26px 0 0;
-  color: #aaa2b5;
-  font-size: 11px;
-}
-
-.home-layout {
-  min-height: 100vh;
-  background:
-    radial-gradient(circle at 80% 0%, rgba(229, 178, 225, 0.28), transparent 30%),
-    #faf8fc;
-}
-
-.top-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  max-width: 1120px;
-  margin: auto;
-  padding: 26px 30px;
-}
-
-.nav-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #332b50;
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.nav-logo .brand-mark {
-  background: linear-gradient(135deg, #7658b8, #d783c2);
-}
-
-.logout-button {
-  padding: 10px 15px;
-  border: 1px solid #e2d9e9;
-  border-radius: 8px;
-  color: #7553b4;
-  background: white;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.home-content {
-  max-width: 1120px;
-  margin: auto;
-  padding: 90px 30px;
-}
-
-.home-hero {
-  max-width: 620px;
-}
-
-.home-hero h1 {
-  margin: 0;
-  font-family: "Playfair Display", serif;
-  font-size: clamp(42px, 6vw, 70px);
-  line-height: 1.05;
-  letter-spacing: -0.05em;
-}
-
-.home-hero p:last-child {
-  max-width: 500px;
-  margin-top: 22px;
-  color: #8b8499;
-  line-height: 1.7;
-}
-
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  margin-top: 70px;
-}
-
-.dashboard-card {
-  min-height: 210px;
-  padding: 28px;
-  border: 1px solid #eee8f3;
-  border-radius: 18px;
-  background: white;
-  box-shadow: 0 14px 35px rgba(85, 58, 117, 0.06);
-}
-
-.dashboard-card.gradient-card {
-  color: white;
-  border: 0;
-  background: linear-gradient(135deg, #7656b7, #d88bc5);
-}
-
-.card-icon {
-  display: block;
-  margin-bottom: 24px;
-  color: #fff;
-  font-size: 25px;
-}
-
-.purple-icon {
-  color: #7656b7;
-}
-
-.pink-icon {
-  color: #d583be;
-}
-
-.dashboard-card h2 {
-  margin: 0;
-  font-family: "Playfair Display", serif;
-  font-size: 23px;
-}
-
-.dashboard-card p {
-  margin: 12px 0 0;
-  color: #948b9f;
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-.gradient-card p {
-  color: rgba(255, 255, 255, 0.78);
-}
-
-@media (max-width: 850px) {
-  .auth-layout {
-    grid-template-columns: 1fr;
+import { useEffect, useState } from "react";
+
+import "./index.css";
+import BackgroundLayer from "./components/BackgroundLayer";
+import BackgroundUploadButton from "./components/BackgroundUploadButton";
+import ChatbotPanel from "./components/ChatbotPanel";
+import NavBar from "./components/NavBar";
+import WelcomeMessage from "./components/WelcomeMessage";
+import {
+  BACKGROUND_STORAGE_KEY,
+  DEFAULT_BACKGROUND_SRC,
+  HOME_ROUTES,
+  LOGIN_KEY,
+  SESSION_KEY,
+  USERNAME_KEY,
+  normalizeRoute,
+  routeExists,
+  sanitizeBackgroundSource,
+} from "./components/homePageUtils";
+
+function App() {
+  const [screen, setScreen] = useState(() => {
+    return localStorage.getItem(LOGIN_KEY) === "true"
+      ? "home"
+      : "auth";
+  });
+  const [mode, setMode] = useState("login");
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [pendingEmail, setPendingEmail] = useState("");
+
+  const [loginForm, setLoginForm] = useState({
+    email: "",
+    password: "",
+  });
+
+  const [registerForm, setRegisterForm] = useState({
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  const [twoFactorCode, setTwoFactorCode] = useState("");
+
+  function updateLoginField(event) {
+    setLoginForm({
+      ...loginForm,
+      [event.target.name]: event.target.value,
+    });
   }
 
-  .brand-panel {
-    min-height: 330px;
-    padding: 45px 30px;
+  function updateRegisterField(event) {
+    setRegisterForm({
+      ...registerForm,
+      [event.target.name]: event.target.value,
+    });
   }
 
-  .brand-panel h1 {
-    max-width: 600px;
-    font-size: 42px;
+  function showLogin() {
+    setMode("login");
+    setError("");
+    setNotice("");
   }
 
-  .brand-description,
-  .brand-stat-row {
-    display: none;
+  function showRegister() {
+    setMode("register");
+    setError("");
+    setNotice("");
   }
 
-  .brand-mark {
-    margin-bottom: 24px;
+  // ============================================================
+  // LOGIN
+  // Connected to Spring Boot.
+  // ============================================================
+
+  async function handleLogin(event) {
+    event.preventDefault();
+
+    setError("");
+    setNotice("");
+
+    if (!loginForm.email || !loginForm.password) {
+      setError("Please complete all fields.");
+      return;
+    }
+
+    try {
+      const params = new URLSearchParams({
+        email: loginForm.email,
+        password: loginForm.password,
+      });
+
+      const response = await fetch(
+        `http://localhost:8080/api/auth/login?${params.toString()}`,
+        {
+          method: "POST",
+        }
+      );
+
+      const message = await response.text();
+
+      if (message.startsWith("Login successful. Session ID: ")) {
+        const sessionPrefix = "Login successful. Session ID: ";
+        const usernameMarker = ". Username: ";
+
+        const sessionStart = sessionPrefix.length;
+        const usernamePosition = message.indexOf(usernameMarker);
+
+        if (usernamePosition === -1) {
+          setError("Login response was not in the expected format.");
+          return;
+        }
+
+        const sessionId = message.substring(
+          sessionStart,
+          usernamePosition
+        );
+
+        const username = message.substring(
+          usernamePosition + usernameMarker.length
+        );
+
+        // Save information returned by the backend.
+        localStorage.setItem(SESSION_KEY, sessionId);
+        localStorage.setItem(USERNAME_KEY, username);
+
+        setPendingEmail(loginForm.email);
+
+        // Continue to the existing demo 2FA screen.
+        setScreen("two-factor");
+      } else {
+        setError(message);
+      }
+    } catch (requestError) {
+      console.error("Login request failed:", requestError);
+
+      setError("Could not connect to the Sync Up server.");
+    }
   }
 
-  .form-panel {
-    padding: 45px 30px 60px;
+  // ============================================================
+  // REGISTRATION
+  // Connected to Spring Boot.
+  // ============================================================
+
+  async function handleRegistration(event) {
+    event.preventDefault();
+
+    setError("");
+    setNotice("");
+
+    const {
+      username,
+      email,
+      password,
+      confirmPassword,
+    } = registerForm;
+
+    if (!username || !email || !password || !confirmPassword) {
+      setError("All fields are required.");
+      return;
+    }
+
+    if (!email.includes("@")) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("Password must contain at least 8 characters.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    try {
+      const params = new URLSearchParams({
+        username,
+        email,
+        password,
+      });
+
+      const response = await fetch(
+        `http://localhost:8080/api/auth/register?${params.toString()}`,
+        {
+          method: "POST",
+        }
+      );
+
+      const message = await response.text();
+
+      if (message !== "User registered successfully") {
+        setError(message);
+        return;
+      }
+
+      setLoginForm({
+        email,
+        password: "",
+      });
+
+      setRegisterForm({
+        username: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      });
+
+      setMode("login");
+
+      setNotice(
+        "Your account was created. Sign in to continue to 2-factor authentication."
+      );
+    } catch (requestError) {
+      console.error("Registration request failed:", requestError);
+
+      setError("Could not connect to the Sync Up server.");
+    }
   }
 
-  .mobile-brand {
-    display: flex;
+  // ============================================================
+  // TWO-FACTOR AUTHENTICATION
+  // Still demo behavior.
+  // ============================================================
+
+  function handleTwoFactorSubmit(event) {
+    event.preventDefault();
+
+    setError("");
+
+    if (!twoFactorCode) {
+      setError("Enter the 6-digit verification code.");
+      return;
+    }
+
+    if (!/^\d{6}$/.test(twoFactorCode)) {
+      setError("The verification code must contain exactly 6 digits.");
+      return;
+    }
+
+    // For now, any 6-digit number is accepted.
+    localStorage.setItem(LOGIN_KEY, "true");
+
+    setScreen("home");
   }
 
-  .dashboard-grid {
-    grid-template-columns: 1fr;
+  // ============================================================
+  // LOGOUT
+  // Connected to Spring Boot.
+  // ============================================================
+
+  async function handleLogout() {
+    setError("");
+
+    const sessionId = localStorage.getItem(SESSION_KEY);
+
+    if (!sessionId) {
+      setError("No active session was found.");
+      return;
+    }
+
+    try {
+      const params = new URLSearchParams({
+        sessionId,
+      });
+
+      const response = await fetch(
+        `http://localhost:8080/api/auth/logout?${params.toString()}`,
+        {
+          method: "POST",
+        }
+      );
+
+      const message = await response.text();
+
+      if (message === "Logout successful") {
+        // Remove all local login/session information.
+        localStorage.removeItem(SESSION_KEY);
+        localStorage.removeItem(LOGIN_KEY);
+        localStorage.removeItem(USERNAME_KEY);
+
+        setScreen("auth");
+        setMode("login");
+        setTwoFactorCode("");
+
+        setLoginForm({
+          email: "",
+          password: "",
+        });
+
+        setNotice("You have been signed out.");
+      } else {
+        setError(message);
+      }
+    } catch (requestError) {
+      console.error("Logout request failed:", requestError);
+
+      setError("Could not connect to the Sync Up server.");
+    }
   }
-}
 
-@media (max-width: 500px) {
-  .verification-card {
-    padding: 32px 24px;
+  // ============================================================
+  // HOME SCREEN
+  // ============================================================
+
+  if (screen === "home") {
+    return <HomePage onLogout={handleLogout} />;
   }
 
-  .form-heading h2 {
-    font-size: 32px;
+  // ============================================================
+  // TWO-FACTOR SCREEN
+  // ============================================================
+
+  if (screen === "two-factor") {
+    return (
+      <TwoFactorPage
+        email={pendingEmail}
+        code={twoFactorCode}
+        setCode={setTwoFactorCode}
+        error={error}
+        onSubmit={handleTwoFactorSubmit}
+        onBack={() => {
+          setScreen("auth");
+          setError("");
+        }}
+      />
+    );
   }
 
-  .home-content {
-    padding-top: 55px;
-  }
-}
-:root {
-  --color-text-primary: #29243d;
-  --color-brand-deep: #332b50;
-  --color-brand-main: #7656b7;
-  --color-brand-accent: #d27fc0;
-  --color-brand-light: #ffeaf9;
-  --color-white: #ffffff;
-  --color-surface-dark: #1f1833;
-  --color-surface-muted: rgba(51, 43, 80, 0.72);
-  --overlay-center-opacity: 0.15;
-  --overlay-edge-opacity: 0.7;
-  --overlay-clear-radius: 25%;
-  --focus-ring: 0 0 0 3px rgba(210, 127, 192, 0.45);
-}
+  // ============================================================
+  // LOGIN / REGISTRATION SCREEN
+  // ============================================================
 
-.home-app-shell {
-  position: relative;
-  min-height: 100vh;
-  overflow: hidden;
-}
+  return (
+    <main className="auth-layout">
+      <section className="brand-panel">
+        <div className="brand-mark">S</div>
 
-.home-app-content {
-  position: relative;
-  z-index: 2;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
+        <p className="eyebrow">SYNC UP SYSTEM</p>
 
-.background-layer {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-}
+        <h1>
+          Stay connected with the people and work that matter.
+        </h1>
 
-.background-image {
-  width: 100%;
-  height: 100%;
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
-}
+        <p className="brand-description">
+          Securely access your Sync Up account and keep everything
+          organized in one calm, collaborative space.
+        </p>
 
-.background-overlay {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    ellipse at center,
-    rgba(0, 0, 0, var(--overlay-center-opacity)) -20%,
-    rgba(0, 0, 0, var(--overlay-center-opacity)) var(--overlay-clear-radius),
-    rgba(0, 0, 0, var(--overlay-edge-opacity)) 100%
+        <div className="brand-stat-row">
+          <div>
+            <strong>2FA</strong>
+            <span>Protected access</span>
+          </div>
+
+          <div>
+            <strong>24/7</strong>
+            <span>Connected workspace</span>
+          </div>
+        </div>
+      </section>
+
+      <section className="form-panel">
+        <div className="form-card">
+          <div className="mobile-brand">
+            <div className="brand-mark small">S</div>
+            <span>Sync Up</span>
+          </div>
+
+          <div className="form-heading">
+            <p className="eyebrow">WELCOME!</p>
+
+            <h2>
+              {mode === "login"
+                ? "Sign in to Sync Up"
+                : "Create your account"}
+            </h2>
+
+            <p>
+              {mode === "login"
+                ? "Enter your details to continue."
+                : "Set up your account to get started."}
+            </p>
+          </div>
+
+          <div className="mode-switcher">
+            <button
+              className={mode === "login" ? "active" : ""}
+              onClick={showLogin}
+              type="button"
+            >
+              Sign in
+            </button>
+
+            <button
+              className={mode === "register" ? "active" : ""}
+              onClick={showRegister}
+              type="button"
+            >
+              Sign up
+            </button>
+          </div>
+
+          {error && <div className="message error">{error}</div>}
+
+          {notice && <div className="message success">{notice}</div>}
+
+          {mode === "login" ? (
+            <form onSubmit={handleLogin}>
+              <label htmlFor="login-email">Email address</label>
+
+              <input
+                id="login-email"
+                name="email"
+                type="email"
+                placeholder="you@example.com"
+                value={loginForm.email}
+                onChange={updateLoginField}
+                autoComplete="email"
+              />
+
+              <div className="label-row">
+                <label htmlFor="login-password">Password</label>
+              </div>
+
+              <input
+                id="login-password"
+                name="password"
+                type="password"
+                placeholder="Enter your password"
+                value={loginForm.password}
+                onChange={updateLoginField}
+                autoComplete="current-password"
+              />
+
+              <button className="primary-button" type="submit">
+                Continue to verification
+                <span>→</span>
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleRegistration}>
+              <label htmlFor="register-username">Username</label>
+
+              <input
+                id="register-username"
+                name="username"
+                type="text"
+                placeholder="Your name"
+                value={registerForm.username}
+                onChange={updateRegisterField}
+                autoComplete="name"
+              />
+
+              <label htmlFor="register-email">Email address</label>
+
+              <input
+                id="register-email"
+                name="email"
+                type="email"
+                placeholder="you@example.com"
+                value={registerForm.email}
+                onChange={updateRegisterField}
+                autoComplete="email"
+              />
+
+              <label htmlFor="register-password">Password</label>
+
+              <input
+                id="register-password"
+                name="password"
+                type="password"
+                placeholder="At least 8 characters"
+                value={registerForm.password}
+                onChange={updateRegisterField}
+                autoComplete="new-password"
+              />
+
+              <label htmlFor="register-confirm-password">
+                Confirm password
+              </label>
+
+              <input
+                id="register-confirm-password"
+                name="confirmPassword"
+                type="password"
+                placeholder="Repeat your password"
+                value={registerForm.confirmPassword}
+                onChange={updateRegisterField}
+                autoComplete="new-password"
+              />
+
+              <button className="primary-button" type="submit">
+                Create account
+                <span>→</span>
+              </button>
+            </form>
+          )}
+
+          <p className="security-note">
+            <span>✦</span>
+            Your account is protected with two-factor authentication.
+          </p>
+        </div>
+      </section>
+    </main>
   );
 }
 
-.home-nav-shell {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  width: 100%;
-  padding: 18px 28px;
+// ============================================================
+// TWO-FACTOR PAGE
+// ============================================================
+
+function TwoFactorPage({
+  email,
+  code,
+  setCode,
+  error,
+  onSubmit,
+  onBack,
+}) {
+  return (
+    <main className="centered-layout">
+      <section className="verification-card">
+        <div className="verification-icon">✦</div>
+
+        <p className="eyebrow">SECURITY CHECK</p>
+
+        <h1>Verify your identity</h1>
+
+        <p className="verification-description">
+          Enter the 6-digit code sent to <strong>{email}</strong>.
+        </p>
+
+        {error && <div className="message error">{error}</div>}
+
+        <form onSubmit={onSubmit}>
+          <label htmlFor="two-factor-code">Verification code</label>
+
+          <input
+            id="two-factor-code"
+            className="code-input"
+            type="text"
+            inputMode="numeric"
+            maxLength="6"
+            placeholder="000000"
+            value={code}
+            onChange={(event) =>
+              setCode(event.target.value.replace(/\D/g, ""))
+            }
+          />
+
+          <button className="primary-button" type="submit">
+            Verify and continue
+            <span>→</span>
+          </button>
+        </form>
+
+        <button
+          type="button"
+          className="back-button"
+          onClick={onBack}
+        >
+          ← Back to sign in
+        </button>
+
+        <p className="demo-hint">
+          Demo: enter any 6-digit code, such as <strong>123456</strong>.
+        </p>
+      </section>
+    </main>
+  );
 }
 
-.home-brand-name {
-  color: var(--color-white);
-  font-size: clamp(24px, 3.5vw, 34px);
-  letter-spacing: 0.02em;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
-  margin: 5px 15px;
-}
+// ============================================================
+// HOME PAGE
+// ============================================================
 
-.home-nav-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+function HomePage({ onLogout }) {
+  const [activePath, setActivePath] = useState(() => {
+    const startingPath = normalizeRoute(window.location.pathname);
 
-.home-nav-list {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
+    return routeExists(startingPath) ? startingPath : "/";
+  });
 
-.home-nav-link {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 10px;
-  border-radius: 8px;
-  color: var(--color-brand-light);
-  font-size: 16px;
-  font-weight: 600;
-  text-decoration: none;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
-  transition: background-color 0.2s ease, color 0.2s ease;
-}
+  const [backgroundSrc, setBackgroundSrc] = useState(() => {
+    return sanitizeBackgroundSource(
+      localStorage.getItem(BACKGROUND_STORAGE_KEY) ||
+        DEFAULT_BACKGROUND_SRC
+    );
+  });
 
-.home-nav-link:hover,
-.home-nav-link:focus-visible {
-  color: var(--color-white);
-  background: rgba(247, 244, 255, 0.16);
-  outline: none;
-}
+  useEffect(() => {
+    if (!routeExists(normalizeRoute(window.location.pathname))) {
+      window.history.replaceState({}, "", "/");
+    }
 
-.home-nav-link.active {
-  color: var(--color-text-primary);
-  background: rgba(247, 244, 255, 0.8);
-  padding: 8px 12px;
-}
+    function handlePopState() {
+      const nextPath = normalizeRoute(window.location.pathname);
 
-.home-logout-button {
-  margin-top: 0;
-  border: 1px solid rgba(255, 255, 255, 0.42);
-  color: var(--color-white);
-  background: rgba(0, 0, 0, 0.2);
-}
+      if (routeExists(nextPath)) {
+        setActivePath(nextPath);
+      } else {
+        window.history.replaceState({}, "", "/");
+        setActivePath("/");
+      }
+    }
 
-.home-logout-button:hover,
-.home-logout-button:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-}
+    window.addEventListener("popstate", handlePopState);
 
-.home-main-content {
-  flex: 1;
-  display: grid;
-  place-items: center;
-  padding: 20px;
-}
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
 
-.welcome-message h1 {
-  margin: 0;
-  color: var(--color-white);
-  font-size: clamp(44px, 8vw, 84px);
-  line-height: 1.1;
-  text-align: center;
-  text-shadow: 0 3px 16px rgba(0, 0, 0, 0.5);
-}
+  function navigateTo(path) {
+    if (path === activePath || !routeExists(path)) {
+      return;
+    }
 
-.placeholder-page {
-  width: min(600px, 100%);
-  padding: 34px;
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  border-radius: 16px;
-  color: var(--color-white);
-  background: rgba(0, 0, 0, 0.28);
-  text-align: center;
-  backdrop-filter: blur(7px);
-}
-
-.placeholder-page h1 {
-  margin: 0;
-  font-size: clamp(28px, 6vw, 46px);
-  text-transform: capitalize;
-}
-
-.placeholder-page p {
-  margin: 16px 0 0;
-  opacity: 0.9;
-}
-
-.placeholder-home-button {
-  width: auto;
-  margin: 24px auto 0;
-  justify-content: center;
-  gap: 8px;
-}
-
-.floating-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 11px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.42);
-  border-radius: 999px;
-  color: var(--color-white);
-  background: var(--color-surface-muted);
-  backdrop-filter: blur(6px);
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.floating-button:hover,
-.floating-button:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-}
-
-.background-upload-wrap {
-  position: fixed;
-  left: 18px;
-  bottom: 18px;
-  z-index: 4;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
-}
-
-.background-upload-error {
-  margin: 0;
-  padding: 8px 10px;
-  border-radius: 8px;
-  color: var(--color-white);
-  background: rgba(0, 0, 0, 0.6);
-  font-size: 12px;
-}
-
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  border: 0;
-  padding: 0;
-  white-space: nowrap;
-  clip-path: inset(50%);
-  clip: rect(0 0 0 0);
-  overflow: hidden;
-}
-
-.chat-toggle {
-  position: fixed;
-  right: 18px;
-  bottom: 18px;
-  z-index: 4;
-}
-
-.chatbot-panel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  z-index: 5;
-  width: min(36vw, 460px);
-  max-width: 100vw;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  border-left: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(31, 24, 51, 0.94);
-  transform: translateX(100%);
-  transition: transform 0.28s ease;
-}
-
-.chatbot-panel.open {
-  transform: translateX(0);
-}
-
-.chatbot-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
-  color: var(--color-white);
-}
-
-.chatbot-header h2 {
-  margin: 0;
-  font-size: 18px;
-}
-
-.chatbot-close {
-  border: 0;
-  color: var(--color-white);
-  background: transparent;
-  font-size: 30px;
-  line-height: 1;
-}
-
-.chatbot-close:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-  border-radius: 8px;
-}
-
-.chatbot-messages {
-  flex: 1;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-}
-
-.chatbot-message {
-  max-width: 95%;
-  padding: 12px;
-  border-radius: 12px;
-  color: var(--color-white);
-  background: rgba(255, 255, 255, 0.16);
-}
-
-.chatbot-message.user {
-  align-self: flex-end;
-  background: rgba(210, 127, 192, 0.45);
-}
-
-.chatbot-message p {
-  margin: 0;
-  line-height: 1.5;
-}
-
-.chatbot-preview-wrap {
-  margin-top: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.chatbot-preview-image {
-  width: 100%;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-}
-
-.chatbot-preview-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.chatbot-preview-actions button,
-.chatbot-form button {
-  padding: 8px 10px;
-  border: 1px solid rgba(255, 255, 255, 0.26);
-  border-radius: 8px;
-  color: var(--color-white);
-  background: rgba(255, 255, 255, 0.14);
-  font-size: 13px;
-}
-
-.chatbot-preview-actions button:focus-visible,
-.chatbot-form button:focus-visible,
-.chatbot-form input:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-}
-
-.chatbot-error {
-  margin: 0;
-  color: var(--color-brand-light);
-  font-size: 13px;
-}
-
-.chatbot-form {
-  display: flex;
-  gap: 8px;
-  padding: 14px 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.14);
-}
-
-.chatbot-form input {
-  margin-top: 0;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  color: var(--color-white);
-  background: rgba(0, 0, 0, 0.26);
-}
-
-.chatbot-form input::placeholder {
-  color: rgba(255, 255, 255, 0.72);
-}
-
-.chatbot-form button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-@media (max-width: 1000px) {
-  .home-nav-shell {
-    align-items: flex-start;
-    flex-direction: column;
+    window.history.pushState({}, "", path);
+    setActivePath(path);
   }
 
-  .home-nav-right {
-    width: 100%;
-    flex-direction: column;
-    align-items: flex-start;
+  function updateBackground(source, options = { persist: true }) {
+    const safeSource = sanitizeBackgroundSource(source);
+    setBackgroundSrc(safeSource);
+
+    if (options.persist) {
+      localStorage.setItem(BACKGROUND_STORAGE_KEY, safeSource);
+    }
   }
 
-  .home-nav-list {
-    flex-wrap: wrap;
-  }
+  return (
+    <div className="home-app-shell">
+      <BackgroundLayer backgroundSrc={backgroundSrc} />
+
+      <div className="home-app-content">
+        <NavBar
+          activePath={activePath}
+          onNavigate={navigateTo}
+          onLogout={onLogout}
+        />
+
+        <main className="home-main-content">
+          {activePath === "/" ? (
+            <WelcomeMessage />
+          ) : (
+            <PlaceholderPage route={activePath} onNavigate={navigateTo} />
+          )}
+        </main>
+
+        <BackgroundUploadButton onBackgroundChange={updateBackground} />
+
+        <ChatbotPanel onSetBackground={updateBackground} />
+      </div>
+    </div>
+  );
 }
 
-@media (max-width: 760px) {
-  .chatbot-panel {
-    width: 100%;
-  }
+function PlaceholderPage({ route, onNavigate }) {
+  const routeInfo = HOME_ROUTES.find(
+    (item) => item.path === route
+  );
+  const routeTitle = routeInfo?.label || "Page";
+
+  return (
+    <section className="placeholder-page">
+      <h1>{routeTitle}</h1>
+
+      <p>
+        This page is coming soon.
+      </p>
+
+      <button
+        type="button"
+        className="primary-button placeholder-home-button"
+        onClick={() => onNavigate("/")}
+      >
+        Back to Home
+      </button>
+    </section>
+  );
 }
 
-@media (max-width: 420px) {
-  .home-nav-shell {
-    padding: 14px;
-  }
-
-  .home-main-content {
-    padding-top: 8px;
-  }
-
-  .floating-button {
-    padding: 10px 12px;
-    font-size: 13px;
-  }
-
-  .welcome-message h1 {
-    font-size: clamp(36px, 12vw, 52px);
-  }
-
-  .placeholder-page {
-    padding: 24px;
-  }
-}
+export default App;

@@ -15,6 +15,7 @@ import {
   USERNAME_KEY,
   normalizeRoute,
   routeExists,
+  sanitizeBackgroundSource,
 } from "./components/homePageUtils";
 
 function App() {
@@ -587,9 +588,9 @@ function HomePage({ onLogout }) {
   });
 
   const [backgroundSrc, setBackgroundSrc] = useState(() => {
-    return (
+    return sanitizeBackgroundSource(
       localStorage.getItem(BACKGROUND_STORAGE_KEY) ||
-      DEFAULT_BACKGROUND_SRC
+        DEFAULT_BACKGROUND_SRC
     );
   });
 
@@ -626,10 +627,11 @@ function HomePage({ onLogout }) {
   }
 
   function updateBackground(source, options = { persist: true }) {
-    setBackgroundSrc(source);
+    const safeSource = sanitizeBackgroundSource(source);
+    setBackgroundSrc(safeSource);
 
     if (options.persist) {
-      localStorage.setItem(BACKGROUND_STORAGE_KEY, source);
+      localStorage.setItem(BACKGROUND_STORAGE_KEY, safeSource);
     }
   }
 

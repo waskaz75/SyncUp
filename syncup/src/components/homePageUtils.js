@@ -56,6 +56,33 @@ export function routeExists(pathname) {
   return HOME_ROUTES.some((route) => route.path === pathname);
 }
 
+export function sanitizeBackgroundSource(source) {
+  if (typeof source !== "string") {
+    return DEFAULT_BACKGROUND_SRC;
+  }
+
+  const value = source.trim();
+
+  if (!value) {
+    return DEFAULT_BACKGROUND_SRC;
+  }
+
+  if (value.startsWith("/") || value.startsWith("blob:")) {
+    return value;
+  }
+
+  if (
+    value.startsWith("data:image/png") ||
+    value.startsWith("data:image/jpeg") ||
+    value.startsWith("data:image/webp") ||
+    value.startsWith("data:image/svg+xml")
+  ) {
+    return value;
+  }
+
+  return DEFAULT_BACKGROUND_SRC;
+}
+
 export function useUser() {
   const [user] = useState(() => {
     const storedUser = localStorage.getItem(USERNAME_KEY);
@@ -75,7 +102,13 @@ export async function generateBackgroundImage(prompt) {
     window.setTimeout(resolve, 900);
   });
 
-  const safePrompt = prompt.slice(0, 42);
+  const safePrompt = prompt
+    .slice(0, 42)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-label="Generated background">
   <defs>

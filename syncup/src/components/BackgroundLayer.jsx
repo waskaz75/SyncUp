@@ -1,10 +1,17 @@
-import { DEFAULT_BACKGROUND_SRC } from "./homePageUtils";
+import {
+  DEFAULT_BACKGROUND_SRC,
+  sanitizeBackgroundSource,
+} from "./homePageUtils";
 
 function BackgroundLayer({ backgroundSrc }) {
+  const safeSource = sanitizeBackgroundSource(
+    backgroundSrc || DEFAULT_BACKGROUND_SRC
+  );
+
   return (
     <div className="background-layer" aria-hidden="true">
       <img
-        src={backgroundSrc || DEFAULT_BACKGROUND_SRC}
+        src={safeSource}
         alt="SyncUp background"
         className="background-image"
       />

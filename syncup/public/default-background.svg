@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-label="Default SyncUp background">
+  <defs>
+    <linearGradient id="syncup-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#332b50" />
+      <stop offset="40%" stop-color="#7656b7" />
+      <stop offset="100%" stop-color="#d27fc0" />
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#syncup-bg)" />
+  <circle cx="250" cy="180" r="220" fill="#f9d8ef" fill-opacity="0.16" />
+  <circle cx="1320" cy="780" r="280" fill="#ffffff" fill-opacity="0.1" />
+</svg>

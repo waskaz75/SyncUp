@@ -1,13 +1,28 @@
 import { useEffect, useState } from "react";
 
 import "./index.css";
-
-const LOGIN_KEY = "syncup_logged_in";
-const SESSION_KEY = "syncup_session_id";
-const USERNAME_KEY = "syncup_username";
+import BackgroundLayer from "./components/BackgroundLayer";
+import BackgroundUploadButton from "./components/BackgroundUploadButton";
+import ChatbotPanel from "./components/ChatbotPanel";
+import NavBar from "./components/NavBar";
+import WelcomeMessage from "./components/WelcomeMessage";
+import {
+  BACKGROUND_STORAGE_KEY,
+  DEFAULT_BACKGROUND_SRC,
+  HOME_ROUTES,
+  LOGIN_KEY,
+  SESSION_KEY,
+  USERNAME_KEY,
+  normalizeRoute,
+  routeExists,
+} from "./components/homePageUtils";
 
 function App() {
-  const [screen, setScreen] = useState("auth");
+  const [screen, setScreen] = useState(() => {
+    return localStorage.getItem(LOGIN_KEY) === "true"
+      ? "home"
+      : "auth";
+  });
   const [mode, setMode] = useState("login");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -26,14 +41,6 @@ function App() {
   });
 
   const [twoFactorCode, setTwoFactorCode] = useState("");
-
-  useEffect(() => {
-    const isLoggedIn = localStorage.getItem(LOGIN_KEY) === "true";
-
-    if (isLoggedIn) {
-      setScreen("home");
-    }
-  }, []);
 
   function updateLoginField(event) {
     setLoginForm({
@@ -124,8 +131,8 @@ function App() {
       } else {
         setError(message);
       }
-    } catch (error) {
-      console.error("Login request failed:", error);
+    } catch (requestError) {
+      console.error("Login request failed:", requestError);
 
       setError("Could not connect to the Sync Up server.");
     }
@@ -207,8 +214,8 @@ function App() {
       setNotice(
         "Your account was created. Sign in to continue to 2-factor authentication."
       );
-    } catch (error) {
-      console.error("Registration request failed:", error);
+    } catch (requestError) {
+      console.error("Registration request failed:", requestError);
 
       setError("Could not connect to the Sync Up server.");
     }
@@ -288,8 +295,8 @@ function App() {
       } else {
         setError(message);
       }
-    } catch (error) {
-      console.error("Logout request failed:", error);
+    } catch (requestError) {
+      console.error("Logout request failed:", requestError);
 
       setError("Could not connect to the Sync Up server.");
     }
@@ -397,23 +404,13 @@ function App() {
             </button>
           </div>
 
-          {error && (
-            <div className="message error">
-              {error}
-            </div>
-          )}
+          {error && <div className="message error">{error}</div>}
 
-          {notice && (
-            <div className="message success">
-              {notice}
-            </div>
-          )}
+          {notice && <div className="message success">{notice}</div>}
 
           {mode === "login" ? (
             <form onSubmit={handleLogin}>
-              <label htmlFor="login-email">
-                Email address
-              </label>
+              <label htmlFor="login-email">Email address</label>
 
               <input
                 id="login-email"
@@ -426,9 +423,7 @@ function App() {
               />
 
               <div className="label-row">
-                <label htmlFor="login-password">
-                  Password
-                </label>
+                <label htmlFor="login-password">Password</label>
               </div>
 
               <input
@@ -441,19 +436,14 @@ function App() {
                 autoComplete="current-password"
               />
 
-              <button
-                className="primary-button"
-                type="submit"
-              >
+              <button className="primary-button" type="submit">
                 Continue to verification
                 <span>→</span>
               </button>
             </form>
           ) : (
             <form onSubmit={handleRegistration}>
-              <label htmlFor="register-username">
-                Username
-              </label>
+              <label htmlFor="register-username">Username</label>
 
               <input
                 id="register-username"
@@ -465,9 +455,7 @@ function App() {
                 autoComplete="name"
               />
 
-              <label htmlFor="register-email">
-                Email address
-              </label>
+              <label htmlFor="register-email">Email address</label>
 
               <input
                 id="register-email"
@@ -479,9 +467,7 @@ function App() {
                 autoComplete="email"
               />
 
-              <label htmlFor="register-password">
-                Password
-              </label>
+              <label htmlFor="register-password">Password</label>
 
               <input
                 id="register-password"
@@ -507,10 +493,7 @@ function App() {
                 autoComplete="new-password"
               />
 
-              <button
-                className="primary-button"
-                type="submit"
-              >
+              <button className="primary-button" type="submit">
                 Create account
                 <span>→</span>
               </button>
@@ -542,33 +525,20 @@ function TwoFactorPage({
   return (
     <main className="centered-layout">
       <section className="verification-card">
-        <div className="verification-icon">
-          ✦
-        </div>
+        <div className="verification-icon">✦</div>
 
-        <p className="eyebrow">
-          SECURITY CHECK
-        </p>
+        <p className="eyebrow">SECURITY CHECK</p>
 
-        <h1>
-          Verify your identity
-        </h1>
+        <h1>Verify your identity</h1>
 
         <p className="verification-description">
-          Enter the 6-digit code sent to{" "}
-          <strong>{email}</strong>.
+          Enter the 6-digit code sent to <strong>{email}</strong>.
         </p>
 
-        {error && (
-          <div className="message error">
-            {error}
-          </div>
-        )}
+        {error && <div className="message error">{error}</div>}
 
         <form onSubmit={onSubmit}>
-          <label htmlFor="two-factor-code">
-            Verification code
-          </label>
+          <label htmlFor="two-factor-code">Verification code</label>
 
           <input
             id="two-factor-code"
@@ -579,16 +549,11 @@ function TwoFactorPage({
             placeholder="000000"
             value={code}
             onChange={(event) =>
-              setCode(
-                event.target.value.replace(/\D/g, "")
-              )
+              setCode(event.target.value.replace(/\D/g, ""))
             }
           />
 
-          <button
-            className="primary-button"
-            type="submit"
-          >
+          <button className="primary-button" type="submit">
             Verify and continue
             <span>→</span>
           </button>
@@ -603,8 +568,7 @@ function TwoFactorPage({
         </button>
 
         <p className="demo-hint">
-          Demo: enter any 6-digit code, such as{" "}
-          <strong>123456</strong>.
+          Demo: enter any 6-digit code, such as <strong>123456</strong>.
         </p>
       </section>
     </main>
@@ -616,94 +580,108 @@ function TwoFactorPage({
 // ============================================================
 
 function HomePage({ onLogout }) {
-  const username =
-    localStorage.getItem(USERNAME_KEY) || "there";
+  const [activePath, setActivePath] = useState(() => {
+    const startingPath = normalizeRoute(window.location.pathname);
+
+    return routeExists(startingPath) ? startingPath : "/";
+  });
+
+  const [backgroundSrc, setBackgroundSrc] = useState(() => {
+    return (
+      localStorage.getItem(BACKGROUND_STORAGE_KEY) ||
+      DEFAULT_BACKGROUND_SRC
+    );
+  });
+
+  useEffect(() => {
+    if (!routeExists(normalizeRoute(window.location.pathname))) {
+      window.history.replaceState({}, "", "/");
+    }
+
+    function handlePopState() {
+      const nextPath = normalizeRoute(window.location.pathname);
+
+      if (routeExists(nextPath)) {
+        setActivePath(nextPath);
+      } else {
+        window.history.replaceState({}, "", "/");
+        setActivePath("/");
+      }
+    }
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
+
+  function navigateTo(path) {
+    if (path === activePath || !routeExists(path)) {
+      return;
+    }
+
+    window.history.pushState({}, "", path);
+    setActivePath(path);
+  }
+
+  function updateBackground(source, options = { persist: true }) {
+    setBackgroundSrc(source);
+
+    if (options.persist) {
+      localStorage.setItem(BACKGROUND_STORAGE_KEY, source);
+    }
+  }
 
   return (
-    <main className="home-layout">
-      <nav className="top-nav">
-        <div className="nav-logo">
-          <div className="brand-mark small">
-            S
-          </div>
+    <div className="home-app-shell">
+      <BackgroundLayer backgroundSrc={backgroundSrc} />
 
-          <span>
-            Sync Up
-          </span>
-        </div>
+      <div className="home-app-content">
+        <NavBar
+          activePath={activePath}
+          onNavigate={navigateTo}
+          onLogout={onLogout}
+        />
 
-        <button
-          className="logout-button"
-          onClick={onLogout}
-        >
-          Sign out
-        </button>
-      </nav>
+        <main className="home-main-content">
+          {activePath === "/" ? (
+            <WelcomeMessage />
+          ) : (
+            <PlaceholderPage route={activePath} onNavigate={navigateTo} />
+          )}
+        </main>
 
-      <section className="home-content">
-        <div className="home-hero">
-          <p className="eyebrow">
-            YOUR WORKSPACE
-          </p>
+        <BackgroundUploadButton onBackgroundChange={updateBackground} />
 
-          <h1>
-            Welcome, {username}.
-          </h1>
+        <ChatbotPanel onSetBackground={updateBackground} />
+      </div>
+    </div>
+  );
+}
 
-          <p>
-            Your account has been verified successfully.
-            You are now signed in to Sync Up.
-          </p>
-        </div>
+function PlaceholderPage({ route, onNavigate }) {
+  const routeInfo = HOME_ROUTES.find(
+    (item) => item.path === route
+  );
+  const routeTitle = routeInfo?.label || "Page";
 
-        <div className="dashboard-grid">
-          <article className="dashboard-card gradient-card">
-            <span className="card-icon">
-              ✦
-            </span>
+  return (
+    <section className="placeholder-page">
+      <h1>{routeTitle}</h1>
 
-            <h2>
-              Account verified
-            </h2>
+      <p>
+        This page is coming soon.
+      </p>
 
-            <p>
-              Your login and 2-factor authentication
-              were completed.
-            </p>
-          </article>
-
-          <article className="dashboard-card">
-            <span className="card-icon purple-icon">
-              ◌
-            </span>
-
-            <h2>
-              Stay organized
-            </h2>
-
-            <p>
-              Manage your profile, projects, and team
-              connections.
-            </p>
-          </article>
-
-          <article className="dashboard-card">
-            <span className="card-icon pink-icon">
-              ♡
-            </span>
-
-            <h2>
-              Work together
-            </h2>
-
-            <p>
-              Sync your work with the people who help
-              you move forward.
-            </p>
-          </article>
-        </div>
-      </section>
-    </main>
+      <button
+        type="button"
+        className="primary-button placeholder-home-button"
+        onClick={() => onNavigate("/")}
+      >
+        Back to Home
+      </button>
+    </section>
   );
 }
 

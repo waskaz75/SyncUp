@@ -7,13 +7,13 @@ function BackgroundLayer({ backgroundSrc }) {
   const safeSource = sanitizeBackgroundSource(
     backgroundSrc || DEFAULT_BACKGROUND_SRC
   );
+  const cssSource = safeSource.replace(/["\\]/g, "\\$&");
 
   return (
     <div className="background-layer" aria-hidden="true">
-      <img
-        src={safeSource}
-        alt="SyncUp background"
+      <div
         className="background-image"
+        style={{ backgroundImage: `url("${cssSource}")` }}
       />
 
       <div className="background-overlay" />

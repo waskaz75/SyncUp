@@ -14,11 +14,6 @@ public class Login {
 
     public User login(String email, String password) {
 
-        // Validate email
-        if (!LoginValidator.validate(email, password)) {
-            return null;
-        }
-
         String sql
                 = "SELECT user_id, username, email, password_hash "
                 + "FROM users WHERE email = ?";
@@ -30,7 +25,7 @@ public class Login {
             ResultSet rs = stmt.executeQuery();
 
             if (!rs.next()) {
-                System.out.println("Error: Email not found");
+                System.out.println("Email not found");
                 return null;
             }
 
@@ -40,7 +35,7 @@ public class Login {
             boolean matches = PasswordHash.verify(password, storedHash);
 
             if (!matches) {
-                System.out.println("Error: Incorrect password");
+                System.out.println("Incorrect password");
                 return null;
             }
 

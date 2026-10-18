@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 
+import { useEffect, useState } from "react";
 import "./index.css";
 
 const LOGIN_KEY = "syncup_logged_in";
@@ -26,6 +26,7 @@ function App() {
   });
 
   const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [isRegistering, setIsRegistering] = useState(false);
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem(LOGIN_KEY) === "true";
@@ -63,7 +64,6 @@ function App() {
 
   // ============================================================
   // LOGIN
-  // Connected to Spring Boot.
   // ============================================================
 
   async function handleLogin(event) {
@@ -78,19 +78,39 @@ function App() {
     }
 
     try {
-      const params = new URLSearchParams({
-        email: loginForm.email,
-        password: loginForm.password,
-      });
-
       const response = await fetch(
-        `http://localhost:8080/api/auth/login?${params.toString()}`,
+        "http://localhost:8080/api/auth/login",
         {
           method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            email: loginForm.email,
+            password: loginForm.password,
+          }),
         }
       );
 
       const message = await response.text();
+
+      const backendErrors = [
+        "Email cannot be empty",
+        "Invalid email format",
+        "Password cannot be empty",
+        "Password must be at least 8 characters",
+        "Email not found",
+        "Incorrect password",
+        "Database error",
+      ];
+
+      if (
+        !response.ok ||
+        backendErrors.some((err) => message.includes(err))
+      ) {
+        setError(message);
+        return;
+      }
 
       if (message.startsWith("Login successful. Session ID: ")) {
         const sessionPrefix = "Login successful. Session ID: ";
@@ -113,31 +133,31 @@ function App() {
           usernamePosition + usernameMarker.length
         );
 
-        // Save information returned by the backend.
         localStorage.setItem(SESSION_KEY, sessionId);
         localStorage.setItem(USERNAME_KEY, username);
 
         setPendingEmail(loginForm.email);
-
-        // Continue to the existing demo 2FA screen.
         setScreen("two-factor");
       } else {
         setError(message);
       }
     } catch (error) {
       console.error("Login request failed:", error);
-
       setError("Could not connect to the Sync Up server.");
     }
   }
 
   // ============================================================
   // REGISTRATION
-  // Connected to Spring Boot.
+  // Only ONE request is sent to Spring Boot.
   // ============================================================
 
   async function handleRegistration(event) {
     event.preventDefault();
+
+    if (isRegistering) {
+      return;
+    }
 
     setError("");
     setNotice("");
@@ -169,24 +189,31 @@ function App() {
       return;
     }
 
-    try {
-      const params = new URLSearchParams({
-        username,
-        email,
-        password,
-      });
+    setIsRegistering(true);
 
+    try {
       const response = await fetch(
-        `http://localhost:8080/api/auth/register?${params.toString()}`,
+        "http://localhost:8080/api/auth/register",
         {
           method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            username,
+            email,
+            password,
+          }),
         }
       );
 
       const message = await response.text();
 
-      if (message !== "User registered successfully") {
-        setError(message);
+      if (
+        !response.ok ||
+        message !== "User registered successfully"
+      ) {
+        setError(message || "Registration failed.");
         return;
       }
 
@@ -209,14 +236,15 @@ function App() {
       );
     } catch (error) {
       console.error("Registration request failed:", error);
-
       setError("Could not connect to the Sync Up server.");
+    } finally {
+      setIsRegistering(false);
     }
   }
 
   // ============================================================
   // TWO-FACTOR AUTHENTICATION
-  // Still demo behavior.
+  // Demo behavior: any six-digit code is accepted.
   // ============================================================
 
   function handleTwoFactorSubmit(event) {
@@ -234,15 +262,12 @@ function App() {
       return;
     }
 
-    // For now, any 6-digit number is accepted.
     localStorage.setItem(LOGIN_KEY, "true");
-
     setScreen("home");
   }
 
   // ============================================================
   // LOGOUT
-  // Connected to Spring Boot.
   // ============================================================
 
   async function handleLogout() {
@@ -256,21 +281,22 @@ function App() {
     }
 
     try {
-      const params = new URLSearchParams({
-        sessionId,
-      });
-
       const response = await fetch(
-        `http://localhost:8080/api/auth/logout?${params.toString()}`,
+        "http://localhost:8080/api/auth/logout",
         {
           method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            sessionId,
+          }),
         }
       );
 
       const message = await response.text();
 
       if (message === "Logout successful") {
-        // Remove all local login/session information.
         localStorage.removeItem(SESSION_KEY);
         localStorage.removeItem(LOGIN_KEY);
         localStorage.removeItem(USERNAME_KEY);
@@ -290,7 +316,6 @@ function App() {
       }
     } catch (error) {
       console.error("Logout request failed:", error);
-
       setError("Could not connect to the Sync Up server.");
     }
   }
@@ -462,7 +487,7 @@ function App() {
                 placeholder="Your name"
                 value={registerForm.username}
                 onChange={updateRegisterField}
-                autoComplete="name"
+                autoComplete="username"
               />
 
               <label htmlFor="register-email">
@@ -510,8 +535,11 @@ function App() {
               <button
                 className="primary-button"
                 type="submit"
+                disabled={isRegistering}
               >
-                Create account
+                {isRegistering
+                  ? "Creating account..."
+                  : "Create account"}
                 <span>→</span>
               </button>
             </form>

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.syncup.auth.validator.LoginValidator;
 import com.syncup.auth.Login;
 import com.syncup.auth.SessionManager;
 import com.syncup.auth.SignUp;
@@ -24,15 +25,17 @@ public class AuthController {
             @RequestParam String email,
             @RequestParam String password) {
 
+        System.out.println("Registration username received: [" + username + "]");
+        
         SignUp signUp = new SignUp();
 
-        boolean success = signUp.registerUser(username, email, password);
+        String result = signUp.registerUser(username, email, password);
 
-        if (success) {
-            return "User registered successfully";
-        } else {
-            return "Registration failed";
+        if (!result.equals("SUCCESS")) {
+            return result; // return validation error to frontend
         }
+
+        return "User registered successfully";
     }
 
     @PostMapping("/login")
@@ -40,8 +43,13 @@ public class AuthController {
             @RequestParam String email,
             @RequestParam String password) {
 
-        Login login = new Login();
+        String validationMessage = LoginValidator.validate(email, password);
 
+        if (validationMessage != null) {
+            return validationMessage; // send error to frontend
+        }
+
+        Login login = new Login();
         User user = login.login(email, password);
 
         if (user != null) {

@@ -8,16 +8,24 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.syncup.auth.validator.LoginValidator;
 import com.syncup.auth.Login;
 import com.syncup.auth.SessionManager;
 import com.syncup.auth.SignUp;
+import com.syncup.auth.twofactor.EmailTwoFactor;
+import com.syncup.auth.twofactor.LoginChallengeManager;
+import com.syncup.auth.validator.LoginValidator;
 import com.syncup.model.User;
 
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "http://localhost:5173")
 public class AuthController {
+
+    private final EmailTwoFactor emailTwoFactor;
+
+    public AuthController(EmailTwoFactor emailTwoFactor) {
+        this.emailTwoFactor = emailTwoFactor;
+    }
 
     @PostMapping("/register")
     public String register(
@@ -26,7 +34,7 @@ public class AuthController {
             @RequestParam String password) {
 
         System.out.println("Registration username received: [" + username + "]");
-        
+
         SignUp signUp = new SignUp();
 
         String result = signUp.registerUser(username, email, password);
@@ -54,21 +62,32 @@ public class AuthController {
 
         if (user != null) {
 
-            SessionManager sessionManager = new SessionManager();
-
-            UUID sessionId
-                    = sessionManager.createSession(user.getUserId());
-
-            if (sessionId != null) {
-                return "Login successful. Session ID: " + sessionId
-                        + ". Username: " + user.getUsername();
-            } else {
-                return "Login successful, but session creation failed";
-            }
+            String code = emailTwoFactor.sendCode(user.getEmail());
+            LoginChallengeManager.LoginChallenge challenge
+                    = LoginChallengeManager.create(user, code);
+            return "2FA_REQUIRED:" + challenge.id() + ":" + user.getUsername();
 
         } else {
             return "Invalid email or password";
         }
+    }
+
+    @PostMapping("/2fa/verify")
+    public String verifyTwoFactor(
+            @RequestParam UUID challengeId,
+            @RequestParam String code) {
+
+        User user = LoginChallengeManager.consume(challengeId, code);
+        if (user == null) {
+            return "Invalid or expired verification code";
+        }
+
+        UUID sessionId = new SessionManager().createSession(user.getUserId());
+        if (sessionId == null) {
+            return "Verification succeeded, but session creation failed";
+        }
+        return "Login successful. Session ID: " + sessionId
+                + ". Username: " + user.getUsername();
     }
 
     @PostMapping("/logout")

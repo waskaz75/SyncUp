@@ -6,7 +6,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
-import com.syncup.auth.validator.LoginValidator;
 import com.syncup.database.JdbcConnector;
 import com.syncup.model.User;
 
@@ -52,4 +51,3 @@ public class Login {
         }
     }
 }
-

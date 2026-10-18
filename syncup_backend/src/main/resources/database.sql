@@ -180,9 +180,11 @@ CREATE TABLE checklists (
 CREATE TABLE checklist_items (
    item_id CHAR(36) PRIMARY KEY,
    checklist_id CHAR(36) NOT NULL,
-   description TEXT NOT NULL,
-   is_completed BOOLEAN NOT NULL DEFAULT FALSE,
+   title VARCHAR(255) NOT NULL,
+   description TEXT,
+   completed BOOLEAN NOT NULL DEFAULT FALSE,
    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+   completed_at DATETIME NULL,
    CONSTRAINT fk_checklist_items_checklist
        FOREIGN KEY (checklist_id)
        REFERENCES checklists(checklist_id)

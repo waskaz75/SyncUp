@@ -1,4 +1,3 @@
-
 package com.syncup.auth;
 
 import java.sql.Connection;
@@ -29,8 +28,7 @@ public class SignUp {
         // Step 4: Prepare the SQL INSERT statement
         String sql = "INSERT INTO users (user_id, username, email, password_hash) VALUES (?, ?, ?, ?)";
 
-        try (Connection conn = JdbcConnector.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = JdbcConnector.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, userId.toString());
             stmt.setString(2, username);
@@ -54,15 +52,15 @@ public class SignUp {
                 String errorMessage = e.getMessage();
 
                 // Check whether the username already exists
-                if (errorMessage != null &&
-                    errorMessage.contains("users.username")) {
+                if (errorMessage != null
+                        && errorMessage.contains("users.username")) {
 
                     return "Username is already taken. Please choose another.";
                 }
 
                 // Check whether the email already exists
-                if (errorMessage != null &&
-                    errorMessage.contains("users.email")) {
+                if (errorMessage != null
+                        && errorMessage.contains("users.email")) {
 
                     return "Email is already registered. Please use another email.";
                 }

@@ -28,6 +28,7 @@ function App() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [pendingEmail, setPendingEmail] = useState("");
+  const [pendingChallenge, setPendingChallenge] = useState("");
 
   const [loginForm, setLoginForm] = useState({
     email: "",
@@ -120,30 +121,14 @@ function App() {
         return;
       }
 
-      if (message.startsWith("Login successful. Session ID: ")) {
-        const sessionPrefix = "Login successful. Session ID: ";
-        const usernameMarker = ". Username: ";
-
-        const sessionStart = sessionPrefix.length;
-        const usernamePosition = message.indexOf(usernameMarker);
-
-        if (usernamePosition === -1) {
+      if (message.startsWith("2FA_REQUIRED:")) {
+        const [, challengeId, username] = message.split(":");
+        if (!challengeId || !username) {
           setError("Login response was not in the expected format.");
           return;
         }
-
-        const sessionId = message.substring(
-          sessionStart,
-          usernamePosition
-        );
-
-        const username = message.substring(
-          usernamePosition + usernameMarker.length
-        );
-
-        localStorage.setItem(SESSION_KEY, sessionId);
         localStorage.setItem(USERNAME_KEY, username);
-
+        setPendingChallenge(challengeId);
         setPendingEmail(loginForm.email);
         setScreen("two-factor");
       } else {
@@ -239,9 +224,7 @@ function App() {
 
       setMode("login");
 
-      setNotice(
-        "Your account was created. Sign in to continue to 2-factor authentication."
-      );
+      setNotice(`${message}. Sign in to receive a verification code by email.`);
     } catch (error) {
       console.error("Registration request failed:", error);
       setError("Could not connect to the Sync Up server.");
@@ -252,10 +235,9 @@ function App() {
 
   // ============================================================
   // TWO-FACTOR AUTHENTICATION
-  // Demo behavior: any six-digit code is accepted.
   // ============================================================
 
-  function handleTwoFactorSubmit(event) {
+  async function handleTwoFactorSubmit(event) {
     event.preventDefault();
 
     setError("");
@@ -270,8 +252,32 @@ function App() {
       return;
     }
 
-    localStorage.setItem(LOGIN_KEY, "true");
-    setScreen("home");
+    try {
+      const response = await fetch("http://localhost:8080/api/auth/2fa/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ challengeId: pendingChallenge, code: twoFactorCode }),
+      });
+      const message = await response.text();
+
+      if (!response.ok || !message.startsWith("Login successful. Session ID: ")) {
+        setError(message || "Verification failed.");
+        return;
+      }
+
+      const sessionPrefix = "Login successful. Session ID: ";
+      const usernameMarker = ". Username: ";
+      const usernamePosition = message.indexOf(usernameMarker);
+      const sessionId = message.substring(sessionPrefix.length, usernamePosition);
+      const username = message.substring(usernamePosition + usernameMarker.length);
+      localStorage.setItem(SESSION_KEY, sessionId);
+      localStorage.setItem(USERNAME_KEY, username);
+      localStorage.setItem(LOGIN_KEY, "true");
+      setScreen("home");
+    } catch (error) {
+      console.error("2FA verification failed:", error);
+      setError("Could not connect to the Sync Up server.");
+    }
   }
 
   // ============================================================
@@ -343,7 +349,7 @@ function App() {
   if (screen === "two-factor") {
     return (
       <TwoFactorPage
-        email={pendingEmail}
+          email={pendingEmail}
         code={twoFactorCode}
         setCode={setTwoFactorCode}
         error={error}
@@ -564,7 +570,7 @@ function TwoFactorPage({
         <h1>Verify your identity</h1>
 
         <p className="verification-description">
-          Enter the 6-digit code sent to <strong>{email}</strong>.
+          Enter the 6-digit verification code sent to <strong>{email}</strong>.
         </p>
 
         {error && <div className="message error">{error}</div>}
@@ -599,9 +605,6 @@ function TwoFactorPage({
           ← Back to sign in
         </button>
 
-        <p className="demo-hint">
-          Demo: enter any 6-digit code, such as <strong>123456</strong>.
-        </p>
       </section>
     </main>
   );

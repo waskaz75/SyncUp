@@ -6,6 +6,7 @@ import BackgroundUploadButton from "./components/BackgroundUploadButton";
 import ChatbotPanel from "./components/ChatbotPanel";
 import NavBar from "./components/NavBar";
 import WelcomeMessage from "./components/WelcomeMessage";
+import ChecklistPage from "./components/ChecklistPage";
 import {
   BACKGROUND_STORAGE_KEY,
   DEFAULT_BACKGROUND_SRC,
@@ -666,6 +667,18 @@ function HomePage({ onLogout }) {
     }
   }
 
+    function renderPage() {
+      if (activePath === "/") {
+        return <WelcomeMessage />;
+      }
+
+      if (activePath === "/checklist") {
+        return <ChecklistPage />;
+      }
+
+      return <PlaceholderPage route={activePath} onNavigate={navigateTo} />;
+    }
+
   return (
     <div className="home-app-shell">
       <BackgroundLayer backgroundSrc={backgroundSrc} />
@@ -678,11 +691,7 @@ function HomePage({ onLogout }) {
         />
 
         <main className="home-main-content">
-          {activePath === "/" ? (
-            <WelcomeMessage />
-          ) : (
-            <PlaceholderPage route={activePath} onNavigate={navigateTo} />
-          )}
+          {renderPage()}
         </main>
 
         <BackgroundUploadButton onBackgroundChange={updateBackground} />

@@ -55,4 +55,39 @@ public class SessionManager {
             return false;
         }
     }
+
+    
+    public UUID getUserIdFromSession(UUID sessionId) {
+
+        if (sessionId == null) {
+            return null;
+        }
+
+        String sql = """
+                SELECT user_id
+                FROM sessions
+                WHERE session_id = ?
+                  AND logout_time IS NULL
+                """;
+
+        try (Connection conn = JdbcConnector.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, sessionId.toString());
+
+            try (java.sql.ResultSet rs = stmt.executeQuery()) {
+
+                if (rs.next()) {
+                    return UUID.fromString(rs.getString("user_id"));
+                    
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
 }

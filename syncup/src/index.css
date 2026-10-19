@@ -738,6 +738,177 @@ input:focus {
   gap: 8px;
 }
 
+.timer-page {
+  width: min(700px, 100%);
+  padding-bottom: 72px;
+}
+
+.timer-panel {
+  padding: clamp(24px, 5vw, 52px);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 20px;
+  color: var(--color-white);
+  background: rgba(31, 24, 51, 0.58);
+  box-shadow: 0 24px 60px rgba(16, 10, 31, 0.22);
+  backdrop-filter: blur(10px);
+}
+
+.timer-heading {
+  text-align: center;
+}
+
+.timer-kicker {
+  margin: 0 0 12px;
+  color: var(--color-brand-light);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+.timer-heading h1 {
+  margin: 0;
+  font-size: clamp(30px, 6vw, 52px);
+  line-height: 1.05;
+}
+
+.timer-heading p:last-child {
+  margin: 14px auto 0;
+  max-width: 430px;
+  color: rgba(255, 255, 255, 0.76);
+  line-height: 1.5;
+}
+
+.timer-mode-switcher {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+  margin-top: 28px;
+  padding: 5px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.timer-mode-switcher button {
+  padding: 10px 8px;
+  border: 0;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.72);
+  background: transparent;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.timer-mode-switcher button.active,
+.timer-mode-switcher button:hover {
+  color: var(--color-white);
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.timer-presets {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 32px;
+}
+
+.timer-presets button {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 12px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 10px;
+  color: var(--color-white);
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 13px;
+}
+
+.timer-presets button:hover,
+.timer-presets button.active {
+  border-color: var(--color-brand-accent);
+  background: rgba(210, 127, 192, 0.28);
+}
+
+.timer-presets strong {
+  font-size: 16px;
+}
+
+.timer-display {
+  margin: 28px 0 24px;
+  color: var(--color-white);
+  font-size: clamp(76px, 17vw, 138px);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  text-align: center;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+}
+
+.timer-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.timer-primary-action,
+.timer-secondary-action,
+.timer-custom-form button {
+  padding: 11px 20px;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.timer-primary-action {
+  min-width: 112px;
+  border: 1px solid var(--color-brand-accent);
+  color: var(--color-white);
+  background: var(--color-brand-main);
+}
+
+.timer-secondary-action {
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  color: var(--color-white);
+  background: transparent;
+}
+
+.timer-primary-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.timer-custom-form {
+  margin-top: 30px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.timer-custom-form label {
+  display: block;
+  margin: 0 0 8px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 13px;
+}
+
+.timer-custom-form > div {
+  display: flex;
+  gap: 8px;
+}
+
+.timer-custom-form input {
+  margin: 0;
+  color: var(--color-white);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.timer-custom-form button {
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  color: var(--color-white);
+  background: rgba(255, 255, 255, 0.12);
+}
+
 .floating-button {
   display: inline-flex;
   align-items: center;

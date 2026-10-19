@@ -24,6 +24,8 @@ target/
 
 # Environment / secrets
 .env
+.env.*
+!.env.example
 
 # virtual machine crash logs
 hs_err_pid*

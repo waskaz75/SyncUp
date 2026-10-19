@@ -8,6 +8,7 @@ import NavBar from "./components/NavBar";
 import WelcomeMessage from "./components/WelcomeMessage";
 import ChecklistPage from "./components/ChecklistPage";
 import CalendarPage from "./components/CalendarPage";
+import TimerPage from "./components/TimerPage";
 import {
   BACKGROUND_STORAGE_KEY,
   DEFAULT_BACKGROUND_SRC,
@@ -20,12 +21,15 @@ import {
   sanitizeBackgroundSource,
 } from "./components/homePageUtils";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 function App() {
   const [screen, setScreen] = useState(() => {
     return localStorage.getItem(LOGIN_KEY) === "true"
       ? "home"
       : "auth";
   });
+
   const [mode, setMode] = useState("login");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -90,7 +94,7 @@ function App() {
 
     try {
       const response = await fetch(
-        "http://localhost:8080/api/auth/login",
+        `${API_BASE_URL}/api/auth/login`,
         {
           method: "POST",
           headers: {
@@ -125,10 +129,12 @@ function App() {
 
       if (message.startsWith("2FA_REQUIRED:")) {
         const [, challengeId, username] = message.split(":");
+
         if (!challengeId || !username) {
           setError("Login response was not in the expected format.");
           return;
         }
+
         localStorage.setItem(USERNAME_KEY, username);
         setPendingChallenge(challengeId);
         setPendingEmail(loginForm.email);
@@ -136,7 +142,7 @@ function App() {
       } else {
         setError(message);
       }
-      } catch (error) {
+    } catch (error) {
       console.error("Login request failed:", error);
       setError("Could not connect to the Sync Up server.");
     }
@@ -188,7 +194,7 @@ function App() {
 
     try {
       const response = await fetch(
-        "http://localhost:8080/api/auth/register",
+        `${API_BASE_URL}/api/auth/register`,
         {
           method: "POST",
           headers: {
@@ -226,7 +232,9 @@ function App() {
 
       setMode("login");
 
-      setNotice(`${message}. Sign in to receive a verification code by email.`);
+      setNotice(
+        `${message}. Sign in to receive a verification code by email.`
+      );
     } catch (error) {
       console.error("Registration request failed:", error);
       setError("Could not connect to the Sync Up server.");
@@ -255,14 +263,26 @@ function App() {
     }
 
     try {
-      const response = await fetch("http://localhost:8080/api/auth/2fa/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ challengeId: pendingChallenge, code: twoFactorCode }),
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/api/auth/2fa/verify`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            challengeId: pendingChallenge,
+            code: twoFactorCode,
+          }),
+        }
+      );
+
       const message = await response.text();
 
-      if (!response.ok || !message.startsWith("Login successful. Session ID: ")) {
+      if (
+        !response.ok ||
+        !message.startsWith("Login successful. Session ID: ")
+      ) {
         setError(message || "Verification failed.");
         return;
       }
@@ -270,11 +290,20 @@ function App() {
       const sessionPrefix = "Login successful. Session ID: ";
       const usernameMarker = ". Username: ";
       const usernamePosition = message.indexOf(usernameMarker);
-      const sessionId = message.substring(sessionPrefix.length, usernamePosition);
-      const username = message.substring(usernamePosition + usernameMarker.length);
+
+      const sessionId = message.substring(
+        sessionPrefix.length,
+        usernamePosition
+      );
+
+      const username = message.substring(
+        usernamePosition + usernameMarker.length
+      );
+
       localStorage.setItem(SESSION_KEY, sessionId);
       localStorage.setItem(USERNAME_KEY, username);
       localStorage.setItem(LOGIN_KEY, "true");
+
       setScreen("home");
     } catch (error) {
       console.error("2FA verification failed:", error);
@@ -298,7 +327,7 @@ function App() {
 
     try {
       const response = await fetch(
-        "http://localhost:8080/api/auth/logout",
+        `${API_BASE_URL}/api/auth/logout`,
         {
           method: "POST",
           headers: {
@@ -351,7 +380,7 @@ function App() {
   if (screen === "two-factor") {
     return (
       <TwoFactorPage
-          email={pendingEmail}
+        email={pendingEmail}
         code={twoFactorCode}
         setCode={setTwoFactorCode}
         error={error}
@@ -521,7 +550,7 @@ function App() {
                 id="register-confirm-password"
                 name="confirmPassword"
                 type="password"
-                placeholder="Repeat your password"
+                placeholder="Repeat password"
                 value={registerForm.confirmPassword}
                 onChange={updateRegisterField}
                 autoComplete="new-password"
@@ -572,7 +601,8 @@ function TwoFactorPage({
         <h1>Verify your identity</h1>
 
         <p className="verification-description">
-          Enter the 6-digit verification code sent to <strong>{email}</strong>.
+          Enter the 6-digit verification code sent to{" "}
+          <strong>{email}</strong>.
         </p>
 
         {error && <div className="message error">{error}</div>}
@@ -606,7 +636,6 @@ function TwoFactorPage({
         >
           ← Back to sign in
         </button>
-
       </section>
     </main>
   );
@@ -662,7 +691,10 @@ function HomePage({ onLogout }) {
     setActivePath(path);
   }
 
-  function updateBackground(source, options = { persist: true }) {
+  function updateBackground(
+    source,
+    options = { persist: true }
+  ) {
     const safeSource = sanitizeBackgroundSource(source);
     setBackgroundSrc(safeSource);
 
@@ -671,18 +703,30 @@ function HomePage({ onLogout }) {
     }
   }
 
-    function renderPage() {
-      if (activePath === "/") {
-        return <WelcomeMessage />;
-      }
-      if (activePath === "/checklist") {
-        return <ChecklistPage />;
-      }
-      if (activePath === "/calendar") {
-        return <CalendarPage />;
-      }
-      return <PlaceholderPage route={activePath} onNavigate={navigateTo} />;
+  function renderPage() {
+    if (activePath === "/") {
+      return <WelcomeMessage />;
     }
+
+    if (activePath === "/checklist") {
+      return <ChecklistPage />;
+    }
+
+    if (activePath === "/calendar") {
+      return <CalendarPage />;
+    }
+
+    if (activePath === "/timer") {
+      return <TimerPage />;
+    }
+
+    return (
+      <PlaceholderPage
+        route={activePath}
+        onNavigate={navigateTo}
+      />
+    );
+  }
 
   return (
     <div className="home-app-shell">
@@ -699,15 +743,17 @@ function HomePage({ onLogout }) {
           {renderPage()}
         </main>
 
-        <BackgroundUploadButton onBackgroundChange={updateBackground} />
+        <BackgroundUploadButton
+          onBackgroundChange={updateBackground}
+        />
 
-        <ChatbotPanel onSetBackground={updateBackground} />
+        <ChatbotPanel
+          onSetBackground={updateBackground}
+        />
       </div>
     </div>
   );
 }
-
-
 
 function PlaceholderPage({ route, onNavigate }) {
   const routeInfo = HOME_ROUTES.find(

@@ -13,6 +13,35 @@ import com.syncup.model.ChecklistItem;
 
 public class ChecklistItemRepository {
 
+    // Check for an existing task in the user's checklist.
+    public boolean existsByTitle(
+            UUID checklistId, UUID userId, String title)
+            throws SQLException {
+
+        String sql = """
+            SELECT 1
+            FROM checklist_items ci
+            JOIN checklists c
+                ON ci.checklist_id = c.checklist_id
+            WHERE ci.checklist_id = ?
+              AND c.user_id = ?
+              AND LOWER(ci.title) = LOWER(?)
+            LIMIT 1
+            """;
+
+        try (Connection conn = JdbcConnector.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, checklistId.toString());
+            stmt.setString(2, userId.toString());
+            stmt.setString(3, title);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
     // CREATE: Add an item only if the user owns the checklist
     public boolean createItem(ChecklistItem item, UUID userId)
             throws SQLException {

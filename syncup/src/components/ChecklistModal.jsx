@@ -87,12 +87,13 @@ function ChecklistModal({ mode, initialText = "", onSubmit, onClose }) {
     setSubmitError("");
     setIsSaving(true);
 
-    const succeeded = await onSubmit(trimmed);
+    const submitResult = await onSubmit(trimmed);
 
     // On success the page closes this modal, so we only handle failure.
-    if (!succeeded) {
+    if (submitResult !== true) {
       setSubmitError(
-        "Could not save. Your text is still here, so you can try again."
+        submitResult?.message ||
+          "Could not save. Your text is still here, so you can try again."
       );
       setIsSaving(false);
     }

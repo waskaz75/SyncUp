@@ -57,6 +57,11 @@ public class ChecklistService {
 
         Checklist checklist = getChecklist(userId);
 
+        if (itemRepository.existsByTitle(
+                checklist.getChecklistId(), userId, trimmedTitle)) {
+            throw new DuplicateTaskException("Duplicate task.");
+        }
+
         ChecklistItem item = new ChecklistItem(
                 UUID.randomUUID(),
                 checklist.getChecklistId(),

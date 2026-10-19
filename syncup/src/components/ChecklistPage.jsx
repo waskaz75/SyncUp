@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import ChecklistItem from "./ChecklistItem";
 import ChecklistModal from "./ChecklistModal";
 import {
+  DUPLICATE_TASK_CODE,
   NOT_FOUND_CODE,
   createItem,
   deleteItem,
@@ -77,6 +78,17 @@ function ChecklistPage() {
       }
 
       console.error("Saving item failed:", saveError);
+
+      if (
+        modal.mode === "create" &&
+        saveError?.code === DUPLICATE_TASK_CODE
+      ) {
+        return {
+          success: false,
+          message: "Duplicate task: an item with this name already exists.",
+        };
+      }
+
       setError("Could not save your changes.");
       return false;
     }

@@ -2,6 +2,7 @@
 const API_BASE_URL = "http://localhost:8080/api/checklist";
 
 export const NOT_FOUND_CODE = "NOT_FOUND";
+export const DUPLICATE_TASK_CODE = "DUPLICATE_TASK";
 
 // Retrieve the session ID created after successful login and 2FA.
 function getSessionId() {
@@ -41,6 +42,10 @@ async function handleResponse(response) {
 
     if (response.status === 404) {
       error.code = NOT_FOUND_CODE;
+    }
+
+    if (response.status === 409) {
+      error.code = DUPLICATE_TASK_CODE;
     }
 
     throw error;

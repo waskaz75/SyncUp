@@ -2,6 +2,8 @@
 
 SyncUp is a hosted productivity application for organizing tasks, calendar events, and focused work in one place. The React/Vite frontend is hosted on Vercel, the Spring Boot REST backend runs on AWS Elastic Beanstalk, and application data is stored in Amazon RDS for MySQL.
 
+**Website:** [syncup-project.com](https://www.syncup-project.com)
+
 ## Features
 
 - Account registration and login

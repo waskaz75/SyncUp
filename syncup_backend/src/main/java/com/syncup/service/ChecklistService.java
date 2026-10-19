@@ -36,17 +36,23 @@ public class ChecklistService {
         );
     }
 
-    // Add a new task
-    public String addItem(
+    // Add a new task and return the created item
+    public ChecklistItem addItem(
             UUID userId, String title, String description)
             throws SQLException {
 
         if (title == null || title.isBlank()) {
-            return "Task title cannot be empty.";
+            throw new IllegalArgumentException(
+                    "Task title cannot be empty."
+            );
         }
 
-        if (title.length() > 255) {
-            return "Task title cannot exceed 255 characters.";
+        String trimmedTitle = title.trim();
+
+        if (trimmedTitle.length() > 255) {
+            throw new IllegalArgumentException(
+                    "Task title cannot exceed 255 characters."
+            );
         }
 
         Checklist checklist = getChecklist(userId);
@@ -54,7 +60,7 @@ public class ChecklistService {
         ChecklistItem item = new ChecklistItem(
                 UUID.randomUUID(),
                 checklist.getChecklistId(),
-                title.trim(),
+                trimmedTitle,
                 description,
                 false,
                 LocalDateTime.now(),
@@ -63,7 +69,11 @@ public class ChecklistService {
 
         boolean created = itemRepository.createItem(item, userId);
 
-        return created ? "SUCCESS" : "Failed to create task.";
+        if (!created) {
+            throw new SQLException("Failed to create task.");
+        }
+
+        return item;
     }
 
     // Update an existing task

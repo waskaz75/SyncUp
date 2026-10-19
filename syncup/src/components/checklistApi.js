@@ -1,131 +1,158 @@
-import { USERNAME_KEY } from "./homePageUtils";
 
-const CHECKLIST_STORAGE_KEY = "syncup_checklist_items";
-const MOCK_DELAY_MS = 300;
+const API_BASE_URL = "http://localhost:8080/api/checklist";
 
 export const NOT_FOUND_CODE = "NOT_FOUND";
 
-function wait() {
-  return new Promise((resolve) => {
-    window.setTimeout(resolve, MOCK_DELAY_MS);
-  });
-}
+// Retrieve the session ID created after successful login and 2FA.
+function getSessionId() {
+  const sessionId = localStorage.getItem("syncup_session_id");
 
-function getStorageKey() {
-  const username = (localStorage.getItem(USERNAME_KEY) || "").trim();
-
-  return `${CHECKLIST_STORAGE_KEY}_${username || "guest"}`;
-}
-
-function readItems() {
-  try {
-    const stored = JSON.parse(localStorage.getItem(getStorageKey()));
-
-    return Array.isArray(stored) ? stored : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeItems(items) {
-  localStorage.setItem(getStorageKey(), JSON.stringify(items));
-}
-
-function createId() {
-  if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return crypto.randomUUID();
+  if (!sessionId) {
+    throw new Error("You must be logged in to access your checklist.");
   }
 
-  return `item-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  return sessionId;
 }
 
-function createNotFoundError() {
-  const error = new Error("Item not found");
-  error.code = NOT_FOUND_CODE;
+// Build the backend URL with the user's session ID.
+function buildUrl(path = "") {
+  const url = new URL(`${API_BASE_URL}${path}`);
 
-  return error;
+  url.searchParams.set("sessionId", getSessionId());
+
+  return url.toString();
 }
 
-// ------------------------------------------------------------
-// Public API
-// ------------------------------------------------------------
-
-// TODO (Spring Boot): replace the mock below with
-//   const response = await fetch("http://localhost:8080/api/checklist", {
-//     method: "GET",
-//   });
-// then throw if !response.ok, and return the items from the response.
-export async function getItems() {
-  await wait();
-
-  return readItems();
-}
-
-// TODO (Spring Boot): replace the mock below with
-//   const response = await fetch("http://localhost:8080/api/checklist", {
-//     method: "POST",
-//     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-//     body: new URLSearchParams({ text }),
-//   });
-// then throw if !response.ok, and return the created item.
-export async function createItem(text) {
-  await wait();
-
-  const newItem = {
-    id: createId(),
-    text: text.trim(),
-    completed: false,
+// Convert a Spring Boot ChecklistItem into the format React expects.
+function convertItem(item) {
+  return {
+    id: item.itemId,
+    text: item.title,
+    completed: item.completed,
   };
-
-  writeItems([...readItems(), newItem]);
-
-  return newItem;
 }
 
-// TODO (Spring Boot): replace the mock below with
-//   const response = await fetch(`http://localhost:8080/api/checklist/${id}`, {
-//     method: "PUT",
-//     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-//     body: new URLSearchParams(changes), // values must be strings
-//   });
-// If the response is 404, throw an error with code NOT_FOUND_CODE.
-export async function updateItem(id, changes) {
-  await wait();
+// Handle unsuccessful backend responses.
+async function handleResponse(response) {
+  const result = await response.text();
 
-  const items = readItems();
-  const index = items.findIndex((item) => item.id === id);
+  if (!response.ok) {
+    const error = new Error(result || "Checklist request failed.");
 
-  if (index === -1) {
-    throw createNotFoundError();
+    if (response.status === 404) {
+      error.code = NOT_FOUND_CODE;
+    }
+
+    throw error;
   }
 
-  const { text, completed } = changes;
+  // The current PUT and DELETE endpoints return plain-text results.
+  if (result !== "SUCCESS") {
+    if (
+      result === "Task not found." ||
+      result === "Item not found." ||
+      result === "Checklist item not found."
+    ) {
+      const error = new Error(result);
+      error.code = NOT_FOUND_CODE;
+      throw error;
+    }
+
+    // Prevent validation or database failure messages returned
+    // with HTTP 200 from being treated as successful operations.
+    throw new Error(result || "Checklist request failed.");
+  }
+
+  return result;
+}
+
+// ------------------------------------------------------------
+// GET: Retrieve all checklist items
+// ------------------------------------------------------------
+export async function getItems() {
+  const response = await fetch(buildUrl("/items"));
+
+  if (!response.ok) {
+    await handleResponse(response);
+  }
+
+  const items = await response.json();
+
+  return items.map(convertItem);
+}
+
+// ------------------------------------------------------------
+// POST: Create a new checklist item
+// ------------------------------------------------------------
+export async function createItem(text) {
+  const response = await fetch(buildUrl("/items"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      title: text.trim(),
+    }),
+  });
+
+  if (!response.ok) {
+    await handleResponse(response);
+  }
+
+  // Spring Boot now returns HTTP 201 and the created item as JSON.
+  const createdItem = await response.json();
+
+  return convertItem(createdItem);
+}
+
+// ------------------------------------------------------------
+// PUT: Update an existing checklist item
+// ------------------------------------------------------------
+export async function updateItem(id, changes) {
+  // Retrieve the existing item so we preserve its title
+  // when only its completion status changes.
+  const items = await getItems();
+
+  const existingItem = items.find((item) => item.id === id);
+
+  if (!existingItem) {
+    const error = new Error("Task not found.");
+    error.code = NOT_FOUND_CODE;
+    throw error;
+  }
 
   const updatedItem = {
-    ...items[index],
-    ...(text !== undefined && { text: text.trim() }),
-    ...(completed !== undefined && { completed }),
+    ...existingItem,
+    ...changes,
   };
 
-  items[index] = updatedItem;
-  writeItems(items);
+  if (updatedItem.text !== undefined) {
+    updatedItem.text = updatedItem.text.trim();
+  }
+
+  const response = await fetch(buildUrl(`/items/${id}`), {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      title: updatedItem.text,
+      completed: String(updatedItem.completed),
+    }),
+  });
+
+  await handleResponse(response);
 
   return updatedItem;
 }
 
-// TODO (Spring Boot): replace the mock below with
-//   const response = await fetch(`http://localhost:8080/api/checklist/${id}`, {
-//     method: "DELETE",
-//   });
-// If the response is 404, throw an error with code NOT_FOUND_CODE.
+// ------------------------------------------------------------
+// DELETE: Delete a checklist item
+// ------------------------------------------------------------
 export async function deleteItem(id) {
-  await wait();
+  const response = await fetch(buildUrl(`/items/${id}`), {
+    method: "DELETE",
+  });
 
-  const items = readItems();
-
-  if (!items.some((item) => item.id === id)) {
-    throw createNotFoundError();
-  }
-
-  writeItems(items.filter((item) => item.id !== id));
+  await handleResponse(response);
 }

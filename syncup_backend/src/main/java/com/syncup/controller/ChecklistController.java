@@ -1,3 +1,4 @@
+
 package com.syncup.controller;
 
 import java.sql.SQLException;
@@ -5,8 +6,10 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -47,6 +50,16 @@ public class ChecklistController {
         return userId;
     }
 
+    // Handle invalid checklist input
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<String> handleValidationError(
+            IllegalArgumentException exception) {
+
+        return ResponseEntity
+                .badRequest()
+                .body(exception.getMessage());
+    }
+
     // GET: Retrieve or create the user's checklist
     @GetMapping
     public Checklist getChecklist(
@@ -67,9 +80,9 @@ public class ChecklistController {
         return checklistService.getItems(userId);
     }
 
-    // POST: Add a new task
+    // POST: Add a new task and return the created item
     @PostMapping("/items")
-    public String addItem(
+    public ResponseEntity<ChecklistItem> addItem(
             @RequestParam UUID sessionId,
             @RequestParam String title,
             @RequestParam(required = false) String description)
@@ -77,9 +90,13 @@ public class ChecklistController {
 
         UUID userId = getAuthenticatedUserId(sessionId);
 
-        return checklistService.addItem(
+        ChecklistItem createdItem = checklistService.addItem(
                 userId, title, description
         );
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(createdItem);
     }
 
     // PUT: Update an existing task

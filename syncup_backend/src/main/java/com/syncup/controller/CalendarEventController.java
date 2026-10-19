@@ -24,7 +24,11 @@ import com.syncup.service.CalendarEventService;
 
 @RestController
 @RequestMapping("/api/calendar")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {
+    "http://localhost:5173",
+    "https://www.syncup-project.com",
+    "https://syncup-project.com"
+})
 public class CalendarEventController {
 
     private final SessionManager sessionManager =

@@ -22,12 +22,16 @@ import org.springframework.web.server.ResponseStatusException;
 import com.syncup.auth.SessionManager;
 import com.syncup.model.Checklist;
 import com.syncup.model.ChecklistItem;
-import com.syncup.service.DuplicateTaskException;
 import com.syncup.service.ChecklistService;
+import com.syncup.service.DuplicateTaskException;
 
 @RestController
 @RequestMapping("/api/checklist")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {
+    "http://localhost:5173",
+    "https://www.syncup-project.com",
+    "https://syncup-project.com"
+})
 public class ChecklistController {
 
     private final ChecklistService checklistService

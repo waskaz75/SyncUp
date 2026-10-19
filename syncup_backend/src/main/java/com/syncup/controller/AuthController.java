@@ -18,7 +18,11 @@ import com.syncup.model.User;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {
+    "http://localhost:5173",
+    "https://www.syncup-project.com",
+    "https://syncup-project.com"
+})
 public class AuthController {
 
     private final EmailTwoFactor emailTwoFactor;

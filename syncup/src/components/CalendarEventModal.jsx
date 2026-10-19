@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 
 import ModalShell from "./ModalShell";
@@ -14,6 +15,7 @@ function CalendarEventModal({
   const titleRef = useRef(null);
   const dateRef = useRef(null);
   const timeRef = useRef(null);
+  const endTimeRef = useRef(null);
   const changeTimeRef = useRef(null);
 
   const isEdit = Boolean(event);
@@ -22,7 +24,9 @@ function CalendarEventModal({
     title: event?.title ?? "",
     date: event?.date ?? initialDate,
     time: event?.time ?? "",
+    endTime: event?.endTime ?? "",
   });
+
   const [invalid, setInvalid] = useState({});
   const [formError, setFormError] = useState("");
   const [submitError, setSubmitError] = useState("");
@@ -63,9 +67,11 @@ function CalendarEventModal({
       title: values.title.trim(),
       date: values.date,
       time: values.time,
+      endTime: values.endTime,
     });
 
-    // On success the page closes this popup, so we only handle failure.
+    // On success the page closes this popup,
+    // so we only handle failure.
     if (!succeeded) {
       setSubmitError(
         "Could not save. Your details are still here, so you can try again."
@@ -85,9 +91,15 @@ function CalendarEventModal({
       title: !values.title.trim(),
       date: !values.date,
       time: !values.time,
+      endTime: !values.endTime,
     };
 
-    if (missing.title || missing.date || missing.time) {
+    if (
+      missing.title ||
+      missing.date ||
+      missing.time ||
+      missing.endTime
+    ) {
       setInvalid(missing);
       setFormError(REQUIRED_MESSAGE);
 
@@ -95,9 +107,22 @@ function CalendarEventModal({
         ["title", titleRef],
         ["date", dateRef],
         ["time", timeRef],
+        ["endTime", endTimeRef],
       ].find(([name]) => missing[name]);
 
       firstMissing?.[1].current?.focus();
+      return;
+    }
+
+    // Events currently start and end on the same day.
+    if (values.endTime <= values.time) {
+      setInvalid((current) => ({
+        ...current,
+        endTime: true,
+      }));
+
+      setFormError("End time must be later than start time.");
+      endTimeRef.current?.focus();
       return;
     }
 
@@ -167,7 +192,7 @@ function CalendarEventModal({
           onChange={updateField}
         />
 
-        <label htmlFor="calendar-event-time">Time</label>
+        <label htmlFor="calendar-event-time">Start time</label>
 
         <input
           ref={timeRef}
@@ -178,6 +203,20 @@ function CalendarEventModal({
           readOnly={isSaving}
           aria-required="true"
           aria-invalid={Boolean(invalid.time)}
+          onChange={updateField}
+        />
+
+        <label htmlFor="calendar-event-end-time">End time</label>
+
+        <input
+          ref={endTimeRef}
+          id="calendar-event-end-time"
+          name="endTime"
+          type="time"
+          value={values.endTime}
+          readOnly={isSaving}
+          aria-required="true"
+          aria-invalid={Boolean(invalid.endTime)}
           onChange={updateField}
         />
 
@@ -202,7 +241,7 @@ function CalendarEventModal({
                 type="button"
                 className="checklist-button"
                 onClick={handleAddAnyway}
-                aria-disabled={isSaving}
+                disabled={isSaving}
               >
                 {isSaving ? "Saving…" : conflictLabel}
               </button>
@@ -212,7 +251,7 @@ function CalendarEventModal({
                 type="button"
                 className="checklist-button checklist-button-secondary"
                 onClick={handleChangeTime}
-                aria-disabled={isSaving}
+                disabled={isSaving}
               >
                 Change time
               </button>
@@ -225,7 +264,7 @@ function CalendarEventModal({
             type="button"
             className="checklist-button checklist-button-secondary"
             onClick={handleClose}
-            aria-disabled={isSaving}
+            disabled={isSaving}
           >
             Cancel
           </button>
@@ -234,7 +273,7 @@ function CalendarEventModal({
             <button
               type="submit"
               className="checklist-button"
-              aria-disabled={isSaving}
+              disabled={isSaving}
             >
               {isSaving ? "Saving…" : submitLabel}
             </button>

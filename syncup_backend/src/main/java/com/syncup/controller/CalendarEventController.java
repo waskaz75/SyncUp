@@ -35,7 +35,7 @@ public class CalendarEventController {
 
     // CREATE: Save a new calendar event
     @PostMapping("/events")
-    public String createEvent(
+    public ResponseEntity<?> createEvent(
             @RequestParam UUID sessionId,
             @RequestParam String title,
             @RequestParam(required = false) String description,
@@ -46,17 +46,38 @@ public class CalendarEventController {
         UUID userId = sessionManager.getUserIdFromSession(sessionId);
 
         if (userId == null) {
-            return "Invalid or expired session";
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid or expired session");
         }
 
-        return calendarEventService.createEvent(
-                userId,
-                title,
-                description,
-                startDatetime,
-                endDatetime,
-                location
-        );
+        try {
+            CalendarEvent createdEvent =
+                    calendarEventService.createEvent(
+                            userId,
+                            title,
+                            description,
+                            startDatetime,
+                            endDatetime,
+                            location
+                    );
+
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(createdEvent);
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(e.getMessage());
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("A database error occurred");
+        }
     }
 
     // READ: Retrieve calendar events for the logged-in user
@@ -120,6 +141,12 @@ public class CalendarEventController {
             return ResponseEntity.ok("SUCCESS");
         }
 
+        if (result.equals("Event not found or no changes were made")) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(result);
+        }
+
         return ResponseEntity.badRequest().body(result);
     }
 
@@ -144,6 +171,12 @@ public class CalendarEventController {
 
         if (result.equals("SUCCESS")) {
             return ResponseEntity.ok("SUCCESS");
+        }
+
+        if (result.equals("Event not found")) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(result);
         }
 
         return ResponseEntity.badRequest().body(result);

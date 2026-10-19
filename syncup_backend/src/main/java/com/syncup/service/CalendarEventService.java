@@ -14,35 +14,39 @@ public class CalendarEventService {
     private final CalendarEventRepository repository =
             new CalendarEventRepository();
 
-    // CREATE
-    public String createEvent(
+    // CREATE: Save and return the newly created event
+    public CalendarEvent createEvent(
             UUID userId,
             String title,
             String description,
             LocalDateTime startDatetime,
             LocalDateTime endDatetime,
-            String location) {
+            String location) throws SQLException {
 
         if (userId == null) {
-            return "Invalid user";
+            throw new IllegalArgumentException("Invalid user");
         }
 
         if (title == null || title.isBlank()) {
-            return "Event title cannot be empty";
+            throw new IllegalArgumentException(
+                    "Event title cannot be empty"
+            );
         }
 
         if (startDatetime == null || endDatetime == null) {
-            return "Event start and end times are required";
+            throw new IllegalArgumentException(
+                    "Event start and end times are required"
+            );
         }
 
         if (!endDatetime.isAfter(startDatetime)) {
-            return "Event end time must be after start time";
+            throw new IllegalArgumentException(
+                    "Event end time must be after start time"
+            );
         }
 
-        UUID eventId = UUID.randomUUID();
-
         CalendarEvent event = new CalendarEvent(
-                eventId,
+                UUID.randomUUID(),
                 userId,
                 title.trim(),
                 description,
@@ -52,22 +56,16 @@ public class CalendarEventService {
                 LocalDateTime.now()
         );
 
-        try {
-            boolean created = repository.createEvent(event);
+        boolean created = repository.createEvent(event);
 
-            if (created) {
-                return "SUCCESS";
-            }
-
-            return "Failed to create event";
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return "A database error occurred. Please try again later.";
+        if (!created) {
+            throw new SQLException("Failed to create event");
         }
+
+        return event;
     }
 
-    // READ
+    // READ: Retrieve all events belonging to the user
     public List<CalendarEvent> getEventsByUserId(UUID userId)
             throws SQLException {
 
@@ -78,7 +76,7 @@ public class CalendarEventService {
         return repository.getEventsByUserId(userId);
     }
 
-    // UPDATE
+    // UPDATE: Modify an existing event
     public String updateEvent(
             UUID eventId,
             UUID userId,
@@ -130,7 +128,7 @@ public class CalendarEventService {
         }
     }
 
-    // DELETE
+    // DELETE: Remove an existing event
     public String deleteEvent(UUID eventId, UUID userId) {
 
         if (eventId == null || userId == null) {

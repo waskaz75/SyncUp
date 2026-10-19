@@ -22,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.syncup.auth.SessionManager;
 import com.syncup.model.Checklist;
 import com.syncup.model.ChecklistItem;
+import com.syncup.service.DuplicateTaskException;
 import com.syncup.service.ChecklistService;
 
 @RestController
@@ -57,6 +58,15 @@ public class ChecklistController {
 
         return ResponseEntity
                 .badRequest()
+                .body(exception.getMessage());
+    }
+
+    @ExceptionHandler(DuplicateTaskException.class)
+    public ResponseEntity<String> handleDuplicateTask(
+            DuplicateTaskException exception) {
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
                 .body(exception.getMessage());
     }
 

@@ -21,16 +21,16 @@ export const HOME_ROUTES = [
     path: "/",
   },
   {
-    label: "Timer",
-    path: "/timer",
-  },
-  {
     label: "Checklist",
     path: "/checklist",
   },
   {
     label: "Calendar",
     path: "/calendar",
+  },
+  {
+    label: "Timer",
+    path: "/timer",
   },
   {
     label: "Study Buddy AI",

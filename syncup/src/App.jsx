@@ -7,6 +7,7 @@ import ChatbotPanel from "./components/ChatbotPanel";
 import NavBar from "./components/NavBar";
 import WelcomeMessage from "./components/WelcomeMessage";
 import ChecklistPage from "./components/ChecklistPage";
+import CalendarPage from "./components/CalendarPage";
 import {
   BACKGROUND_STORAGE_KEY,
   DEFAULT_BACKGROUND_SRC,
@@ -674,11 +675,12 @@ function HomePage({ onLogout }) {
       if (activePath === "/") {
         return <WelcomeMessage />;
       }
-
       if (activePath === "/checklist") {
         return <ChecklistPage />;
       }
-
+      if (activePath === "/calendar") {
+        return <CalendarPage />;
+      }
       return <PlaceholderPage route={activePath} onNavigate={navigateTo} />;
     }
 

@@ -1,5 +1,5 @@
 
-const API_BASE_URL = "http://localhost:8080/api/checklist";
+const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api/checklist`;
 
 export const NOT_FOUND_CODE = "NOT_FOUND";
 export const DUPLICATE_TASK_CODE = "DUPLICATE_TASK";

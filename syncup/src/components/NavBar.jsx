@@ -1,4 +1,5 @@
 import { HOME_ROUTES } from "./homePageUtils";
+import ProfileMenu from "./ProfileMenu";
 
 function NavBar({
   activePath,
@@ -36,13 +37,7 @@ function NavBar({
           </ul>
         </nav>
 
-        <button
-          type="button"
-          className="logout-button home-logout-button"
-          onClick={onLogout}
-        >
-          Sign out
-        </button>
+        <ProfileMenu onLogout={onLogout} />
       </div>
     </header>
   );

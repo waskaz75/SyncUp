@@ -135,7 +135,6 @@ function TimerPage() {
         <div className="timer-heading">
           <p className="timer-kicker">TIME TOOL</p>
           <h1 id="timer-title">Stay in the moment.</h1>
-          <p>Choose a mode, start the clock, and let SyncUp hold the time.</p>
         </div>
 
         <div className="timer-mode-switcher" role="tablist" aria-label="Timer modes">

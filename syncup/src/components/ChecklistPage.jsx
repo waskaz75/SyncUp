@@ -32,7 +32,9 @@ function ChecklistPage() {
   }, []);
 
   useEffect(() => {
-    loadItems();
+    const timeoutId = window.setTimeout(loadItems, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadItems]);
 
   // One place decides what error message to show.

@@ -71,7 +71,9 @@ function CalendarPage() {
   }, []);
 
   useEffect(() => {
-    loadEvents();
+    const timeoutId = window.setTimeout(loadEvents, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadEvents]);
 
 

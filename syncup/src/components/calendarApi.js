@@ -1,5 +1,5 @@
 
-const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api/calendar`;
+const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL || ""}/api/calendar`;
 
 export const NOT_FOUND_CODE = "NOT_FOUND";
 

@@ -739,12 +739,20 @@ input:focus {
 }
 
 .timer-page {
-  width: min(700px, 100%);
+  width: 100%;
+  max-width: 1200px;
+  height: 100%;
+  min-height: 0;
+  align-self: stretch;
   padding-bottom: 72px;
 }
 
 .timer-panel {
-  padding: clamp(24px, 5vw, 52px);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding: clamp(14px, 3vh, 40px) clamp(18px, 4vw, 52px);
   border: 1px solid rgba(255, 255, 255, 0.24);
   border-radius: 20px;
   color: var(--color-white);
@@ -758,16 +766,16 @@ input:focus {
 }
 
 .timer-kicker {
-  margin: 0 0 12px;
+  margin: 0 0 clamp(4px, 1vh, 12px);
   color: var(--color-brand-light);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.18em;
 }
 
 .timer-heading h1 {
   margin: 0;
-  font-size: clamp(30px, 6vw, 52px);
+  font-size: clamp(24px, 5vh, 48px);
   line-height: 1.05;
 }
 
@@ -781,20 +789,20 @@ input:focus {
 .timer-mode-switcher {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 5px;
-  margin-top: 28px;
-  padding: 5px;
+  gap: 6px;
+  margin-top: clamp(12px, 2.5vh, 28px);
+  padding: 6px;
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.2);
 }
 
 .timer-mode-switcher button {
-  padding: 10px 8px;
+  padding: clamp(10px, 1.8vh, 16px) 8px;
   border: 0;
   border-radius: 8px;
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(255, 255, 255, 0.8);
   background: transparent;
-  font-size: 13px;
+  font-size: clamp(14px, min(2.6vh, 4vw), 20px);
   font-weight: 700;
 }
 
@@ -807,20 +815,20 @@ input:focus {
 .timer-presets {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-top: 32px;
+  gap: 10px;
+  margin-top: clamp(12px, 2.5vh, 28px);
 }
 
 .timer-presets button {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  padding: 12px 10px;
+  gap: 4px;
+  padding: clamp(10px, 1.8vh, 18px) 10px;
   border: 1px solid rgba(255, 255, 255, 0.24);
   border-radius: 10px;
   color: var(--color-white);
   background: rgba(255, 255, 255, 0.08);
-  font-size: 13px;
+  font-size: clamp(14px, min(2.4vh, 3.8vw), 19px);
 }
 
 .timer-presets button:hover,
@@ -830,13 +838,18 @@ input:focus {
 }
 
 .timer-presets strong {
-  font-size: 16px;
+  font-size: clamp(18px, min(3.4vh, 5vw), 28px);
 }
 
 .timer-display {
-  margin: 28px 0 24px;
+  flex: 1;                    /* the "spring": takes all leftover height */
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: clamp(6px, 2vh, 24px) 0;
   color: var(--color-white);
-  font-size: clamp(76px, 17vw, 138px);
+  font-size: clamp(56px, min(15vw, 17vh), 170px);
   font-variant-numeric: tabular-nums;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -854,9 +867,9 @@ input:focus {
 .timer-primary-action,
 .timer-secondary-action,
 .timer-custom-form button {
-  padding: 11px 20px;
+  padding: clamp(10px, 1.6vh, 14px) 22px;
   border-radius: 9px;
-  font-size: 14px;
+  font-size: clamp(14px, 2.2vh, 17px);
   font-weight: 700;
 }
 
@@ -873,15 +886,22 @@ input:focus {
   background: transparent;
 }
 
+.timer-custom-form {
+  margin-top: clamp(10px, 2vh, 24px);
+  padding-top: clamp(10px, 1.8vh, 20px);
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.timer-custom-form button {
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  color: var(--color-white);
+  background: rgba(255, 255, 255, 0.12);
+}
+
 .timer-primary-action:disabled {
   cursor: not-allowed;
   opacity: 0.5;
-}
-
-.timer-custom-form {
-  margin-top: 30px;
-  padding-top: 22px;
-  border-top: 1px solid rgba(255, 255, 255, 0.16);
 }
 
 .timer-custom-form label {

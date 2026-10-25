@@ -47,56 +47,6 @@ SyncUp/
 
 ## Configuration
 
-### Local development
-
-Local testing uses the same hosted RDS database as production. The local
-profile prints 2FA codes in the backend terminal instead of sending email.
-Local testing creates real records in the hosted database, so use test accounts
-and test data.
-
-#### 1. Start the backend
-
-Open a terminal at the repository root and run:
-
-```powershell
-cd syncup_backend
-
-$env:SYNCUP_DB_USER = "SyncUpAdmin"
-$env:SYNCUP_DB_PASSWORD = "<hosted-database-password>"
-
-mvn spring-boot:run "-Dspring-boot.run.profiles=local"
-```
-
-Keep this terminal open. The local profile already provides the hosted RDS URL:
-
-```text
-jdbc:mysql://syncupdb.c76g802m8y7r.us-east-2.rds.amazonaws.com:3306/syncupdb
-```
-
-Do not commit or paste the real database password into a source file.
-
-#### 2. Install and start the frontend
-
-Open a 2nd terminal at the repository root and run:
-
-```powershell
-cd syncup
-
-npm install
-npm run dev
-```
-
-Open the local URL printed by Vite, normally:
-
-```text
-http://localhost:5173
-```
-
-The Vite development server proxies frontend `/api` requests to:
-
-```text
-http://localhost:8080
-```
 ### Backend environment variables
 
 The backend reads the database password and SMTP settings from environment variables. Configure these values in the AWS Elastic Beanstalk environment:

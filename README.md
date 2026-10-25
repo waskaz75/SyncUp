@@ -58,6 +58,7 @@ The backend reads the database password and SMTP settings from environment varia
 | `SMTP_PORT` | No | SMTP server port; defaults to `587` |
 | `SMTP_USERNAME` | Yes | SMTP account username |
 | `SYNCUP_MAIL_FROM` | No | Sender address; defaults to `SMTP_USERNAME` |
+| `SYNCUP_UPLOAD_DIR` | No | Directory for uploaded files; defaults to `uploads` |
 | `PORT` | No | Backend port; defaults to `8080` |
 
 The database password and SMTP credentials must not be committed to the repository.
@@ -115,6 +116,13 @@ The deployed frontend communicates with the Elastic Beanstalk backend through `V
 - `/api/auth` — registration, login, two-factor verification, and logout
 - `/api/calendar` — calendar event operations
 - `/api/checklist` — checklist and checklist item operations
+- `/api/files` — authenticated folder creation, file upload, listing, download, and deletion
+
+File uploads use `multipart/form-data` with a `file` part. Include the active
+`sessionId` on every request; pass `folderId` to place a file in a folder.
+Uploaded bytes are stored in the directory configured by `SYNCUP_UPLOAD_DIR`
+(default: `uploads`). Configure persistent storage for deployed environments
+because the local filesystem may not survive an instance replacement.
 
 The backend allows requests from the deployed SyncUp origins configured in its controllers. If the production frontend domain changes, update the backend CORS configuration before deploying.
 

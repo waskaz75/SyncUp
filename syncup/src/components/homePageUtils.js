@@ -40,6 +40,10 @@ export const HOME_ROUTES = [
     label: "Comms Channel",
     path: "/comms",
   },
+  {
+    label: "Storage",
+    path: "/storage",
+  },
 ];
 
 export function normalizeRoute(pathname) {

@@ -9,6 +9,7 @@ import WelcomeMessage from "./components/WelcomeMessage";
 import ChecklistPage from "./components/ChecklistPage";
 import CalendarPage from "./components/CalendarPage";
 import TimerPage from "./components/TimerPage";
+import StoragePage from "./components/StoragePage";
 import {
   BACKGROUND_STORAGE_KEY,
   DEFAULT_BACKGROUND_SRC,
@@ -720,6 +721,10 @@ function HomePage({ onLogout }) {
       return <TimerPage />;
     }
 
+    if (activePath === "/storage") {
+      return <StoragePage />;
+    }
+
     return (
       <PlaceholderPage
         route={activePath}
@@ -743,13 +748,11 @@ function HomePage({ onLogout }) {
           {renderPage()}
         </main>
 
-        <BackgroundUploadButton
-          onBackgroundChange={updateBackground}
-        />
+        <div hidden={activePath !== "/"}>
+          <BackgroundUploadButton onBackgroundChange={updateBackground} />
 
-        <ChatbotPanel
-          onSetBackground={updateBackground}
-        />
+          <ChatbotPanel onSetBackground={updateBackground} />
+        </div>
       </div>
     </div>
   );

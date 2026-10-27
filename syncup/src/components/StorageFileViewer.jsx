@@ -5,11 +5,19 @@ import { getPreview } from "./storageUtils";
 
 const MAX_TEXT_CHARS = 200000;
 
-function StorageFileViewer({ file, folderName, headingRef, onBack }) {
+function StorageFileViewer({
+  file,
+  folderName,
+  headingRef,
+  onBack,
+  hasSelection,
+  onDeleteSelected,
+}) {
   const [status, setStatus] = useState("loading");
   const [url, setUrl] = useState("");
   const [text, setText] = useState("");
   const [isTruncated, setIsTruncated] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const preview = getPreview(file);
 
@@ -44,6 +52,7 @@ function StorageFileViewer({ file, folderName, headingRef, onBack }) {
       } catch (loadError) {
         if (!isCancelled) {
           console.error("Opening file failed:", loadError);
+          setErrorMessage(loadError.message);
           setStatus("error");
         }
       }
@@ -72,7 +81,7 @@ function StorageFileViewer({ file, folderName, headingRef, onBack }) {
     if (status === "error") {
       return (
         <p className="storage-status" role="alert">
-          Could not open this file. Go back and try again.
+          {errorMessage || "Could not open this file. Go back and try again."}
         </p>
       );
     }
@@ -146,7 +155,7 @@ function StorageFileViewer({ file, folderName, headingRef, onBack }) {
           {`← Back to ${folderName}`}
         </button>
 
-        {status === "ready" && (
+        {status === "ready" && !hasSelection && (
           <a
             className="checklist-button storage-download"
             href={url}
@@ -154,6 +163,33 @@ function StorageFileViewer({ file, folderName, headingRef, onBack }) {
           >
             Download
           </a>
+        )}
+        {hasSelection && (
+          <button
+            type="button"
+            className="checklist-button storage-trash-button"
+            onClick={onDeleteSelected}
+            aria-label="Delete selected items"
+            title="Delete selected items"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M3 6h18" />
+              <path d="M8 6V4h8v2" />
+              <path d="m19 6-1 14H6L5 6" />
+              <path d="M10 11v5M14 11v5" />
+            </svg>
+            Delete
+          </button>
         )}
       </div>
 

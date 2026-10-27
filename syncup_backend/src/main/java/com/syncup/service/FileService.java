@@ -4,15 +4,10 @@ import com.syncup.database.FileRepository;
 import com.syncup.model.Folder;
 import com.syncup.model.StoredFile;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,13 +15,8 @@ import org.springframework.web.multipart.MultipartFile;
 public class FileService {
 
     private final FileRepository fileRepository;
-    private final Path uploadRoot;
-
-    public FileService(
-            FileRepository fileRepository,
-            @Value("${syncup.upload-dir:uploads}") String uploadDirectory) {
+    public FileService(FileRepository fileRepository) {
         this.fileRepository = fileRepository;
-        this.uploadRoot = Paths.get(uploadDirectory).toAbsolutePath().normalize();
     }
 
     public Folder createFolder(UUID userId, String name, UUID parentFolderId)
@@ -82,41 +72,23 @@ public class FileService {
         }
 
         UUID fileId = UUID.randomUUID();
-        String storedName = fileId + "-" + fileName;
-        Path destination = uploadRoot.resolve(storedName).normalize();
-        if (!destination.getParent().equals(uploadRoot)) {
-            throw new IllegalArgumentException("Invalid file name.");
-        }
-
-        Files.createDirectories(uploadRoot);
-        try (InputStream input = upload.getInputStream()) {
-            Files.copy(input, destination, StandardCopyOption.REPLACE_EXISTING);
-        }
-
         StoredFile file = new StoredFile(
                 fileId, userId, folderId, fileName, upload.getContentType(),
-                storedName, LocalDateTime.now());
-        try {
-            if (!fileRepository.createFile(file)) {
-                throw new java.sql.SQLException("Failed to save file metadata.");
-            }
-            return file;
-        } catch (java.sql.SQLException | RuntimeException exception) {
-            Files.deleteIfExists(destination);
-            throw exception;
+                upload.getSize(), fileName, LocalDateTime.now());
+        if (!fileRepository.createFile(file, upload.getBytes())) {
+            throw new java.sql.SQLException("Failed to save file.");
         }
+        return file;
     }
 
-    public Path getFilePath(UUID userId, UUID fileId)
+    public byte[] getFileContents(UUID userId, UUID fileId)
             throws java.sql.SQLException {
-        StoredFile file = fileRepository.getFile(fileId, userId);
-        if (file == null) {
-            return null;
-        }
-        Path path = uploadRoot.resolve(file.getFileUrl()).normalize();
-        return path.getParent().equals(uploadRoot) && Files.isRegularFile(path)
-                ? path
-                : null;
+        return fileRepository.getFileContents(fileId, userId);
+    }
+
+    public StoredFile getFile(UUID fileId, UUID userId)
+            throws java.sql.SQLException {
+        return fileRepository.getFile(fileId, userId);
     }
 
     public String getFileName(UUID userId, UUID fileId)
@@ -126,15 +98,15 @@ public class FileService {
     }
 
     public boolean deleteFile(UUID userId, UUID fileId)
-            throws java.sql.SQLException, IOException {
-        StoredFile file = fileRepository.getFile(fileId, userId);
-        if (file == null) {
+            throws java.sql.SQLException {
+        return fileRepository.deleteFile(fileId, userId);
+    }
+
+    public boolean deleteFolder(UUID userId, UUID folderId)
+            throws java.sql.SQLException {
+        if (!fileRepository.folderBelongsToUser(folderId, userId)) {
             return false;
         }
-        if (!fileRepository.deleteFile(fileId, userId)) {
-            return false;
-        }
-        Files.deleteIfExists(uploadRoot.resolve(file.getFileUrl()).normalize());
-        return true;
+        return fileRepository.deleteFolder(folderId, userId);
     }
 }

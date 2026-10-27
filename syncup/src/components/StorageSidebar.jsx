@@ -9,6 +9,10 @@ function StorageSidebar({
   onToggleFolder,
   onOpenFile,
   onNewFolder,
+  selectedFolderIds,
+  selectedFileIds,
+  onToggleFolderSelection,
+  onToggleFileSelection,
 }) {
   return (
     <aside className="storage-sidebar" aria-labelledby="storage-sidebar-title">
@@ -22,6 +26,7 @@ function StorageSidebar({
         >
           + New folder
         </button>
+
       </div>
 
       {!isLoading && folders.length === 0 && (
@@ -58,6 +63,14 @@ function StorageSidebar({
                   </span>
                 </button>
 
+                <input
+                  type="checkbox"
+                  className="storage-selection-checkbox"
+                  checked={selectedFolderIds.includes(folder.id)}
+                  onChange={() => onToggleFolderSelection(folder.id)}
+                  aria-label={`Select folder ${folder.name}`}
+                />
+
                 <button
                   type="button"
                   className="storage-folder-button"
@@ -78,6 +91,13 @@ function StorageSidebar({
                   ) : (
                     folderFiles.map((file) => (
                       <li key={file.id}>
+                        <input
+                          type="checkbox"
+                          className="storage-selection-checkbox"
+                          checked={selectedFileIds.includes(file.id)}
+                          onChange={() => onToggleFileSelection(file.id)}
+                          aria-label={`Select file ${file.name}`}
+                        />
                         <button
                           type="button"
                           className={`storage-file-link ${

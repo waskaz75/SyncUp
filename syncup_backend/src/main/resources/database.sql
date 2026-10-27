@@ -6,7 +6,9 @@ USE syncupdb;
 CREATE TABLE profile_pictures (
    profile_id CHAR(36) PRIMARY KEY,
    avatar_name VARCHAR(100) NOT NULL,
-   image_url VARCHAR(2048) NOT NULL
+   image_url VARCHAR(2048) NOT NULL,
+   image_data LONGBLOB NULL,
+   content_type VARCHAR(100) NULL
 );
 -- =========================================================
 -- USERS
@@ -218,7 +220,9 @@ CREATE TABLE files (
    folder_id CHAR(36) NULL,
    file_name VARCHAR(255) NOT NULL,
    file_type VARCHAR(100),
+   file_size BIGINT NOT NULL DEFAULT 0,
    file_url VARCHAR(2048) NOT NULL,
+   file_data LONGBLOB NULL,
    uploaded_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
    CONSTRAINT fk_files_user
        FOREIGN KEY (user_id)
@@ -227,5 +231,5 @@ CREATE TABLE files (
    CONSTRAINT fk_files_folder
        FOREIGN KEY (folder_id)
        REFERENCES folders(folder_id)
-       ON DELETE SET NULL
+       ON DELETE CASCADE
 );

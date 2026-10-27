@@ -1,110 +1,44 @@
-import { USERNAME_KEY } from "./homePageUtils";
+const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL || ""}/api/profile`;
 
-const PROFILE_PICTURE_KEY = "syncup_profile_picture";
-const MOCK_DELAY_MS = 300;
-const AVATAR_SIZE = 256;
-
-// ------------------------------------------------------------
-// Mock helpers (these all disappear when the backend is wired in)
-// ------------------------------------------------------------
-
-function wait() {
-  return new Promise((resolve) => {
-    window.setTimeout(resolve, MOCK_DELAY_MS);
-  });
+function getSessionId() {
+  const sessionId = localStorage.getItem("syncup_session_id");
+  if (!sessionId) {
+    throw new Error("You must be logged in to access your profile.");
+  }
+  return sessionId;
 }
 
-function getStorageKey() {
-  const username = (localStorage.getItem(USERNAME_KEY) || "").trim();
-  return `${PROFILE_PICTURE_KEY}_${username || "guest"}`;
+function buildUrl() {
+  const url = new URL(`${API_BASE_URL}/picture`, window.location.origin);
+  url.searchParams.set("sessionId", getSessionId());
+  return url.toString();
 }
 
-function isSafePicture(value) {
-  return (
-    typeof value === "string" &&
-    /^data:image\/(png|jpeg|webp);base64,/.test(value)
-  );
+async function getPictureResponse() {
+  const response = await fetch(buildUrl());
+  if (response.status === 404) return null;
+  if (!response.ok) {
+    throw new Error((await response.text()) || "Profile request failed.");
+  }
+  return response;
 }
 
-function resizeToSquareDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const objectUrl = URL.createObjectURL(file);
-    const image = new Image();
-
-    image.onload = () => {
-      URL.revokeObjectURL(objectUrl);
-
-      const side = Math.min(image.naturalWidth, image.naturalHeight);
-      const sourceX = (image.naturalWidth - side) / 2;
-      const sourceY = (image.naturalHeight - side) / 2;
-
-      const canvas = document.createElement("canvas");
-      canvas.width = AVATAR_SIZE;
-      canvas.height = AVATAR_SIZE;
-
-      const context = canvas.getContext("2d");
-
-      if (!context) {
-        reject(new Error("Canvas is not supported"));
-        return;
-      }
-
-      context.drawImage(
-        image,
-        sourceX,
-        sourceY,
-        side,
-        side,
-        0,
-        0,
-        AVATAR_SIZE,
-        AVATAR_SIZE
-      );
-
-      resolve(canvas.toDataURL("image/webp", 0.9));
-    };
-
-    image.onerror = () => {
-      URL.revokeObjectURL(objectUrl);
-      reject(new Error("Could not read the image"));
-    };
-
-    image.src = objectUrl;
-  });
-}
-
-// ------------------------------------------------------------
-// Public API
-// ------------------------------------------------------------
-
-// TODO (Spring Boot): replace the mock below with
-//   const response = await fetch("http://localhost:8080/api/profile/picture", {
-//     method: "GET",
-//   });
-// then throw if !response.ok, and return the picture URL
-// (return "" when the user has no picture yet).
 export async function getProfilePicture() {
-  await wait();
-
-  const stored = localStorage.getItem(getStorageKey());
-
-  return isSafePicture(stored) ? stored : "";
+  const response = await getPictureResponse();
+  if (!response) return "";
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
 }
 
-// TODO (Spring Boot): replace the mock below with
-//   const formData = new FormData();
-//   formData.append("picture", file);
-//   const response = await fetch("http://localhost:8080/api/profile/picture", {
-//     method: "POST",
-//     body: formData, // do NOT set Content-Type; the browser adds it for files
-//   });
-// then throw if !response.ok, and return the new picture URL.
 export async function updateProfilePicture(file) {
-  await wait();
-
-  const pictureUrl = await resizeToSquareDataUrl(file);
-
-  localStorage.setItem(getStorageKey(), pictureUrl);
-
-  return pictureUrl;
+  const formData = new FormData();
+  formData.append("picture", file);
+  const response = await fetch(buildUrl(), {
+    method: "POST",
+    body: formData,
+  });
+  if (!response.ok) {
+    throw new Error((await response.text()) || "Profile picture update failed.");
+  }
+  return getProfilePicture();
 }

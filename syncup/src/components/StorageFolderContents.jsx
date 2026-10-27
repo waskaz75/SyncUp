@@ -9,6 +9,10 @@ function StorageFolderContents({
   headingRef,
   onUpload,
   onOpenFile,
+  selectedFileIds,
+  onToggleFileSelection,
+  hasSelection,
+  onDeleteSelected,
 }) {
   const inputRef = useRef(null);
 
@@ -35,15 +39,43 @@ function StorageFolderContents({
           {folder.name}
         </h2>
 
-        <button
-          type="button"
-          className="checklist-button"
-          onClick={openFilePicker}
-          aria-disabled={isUploading}
-        >
-          {isUploading ? "Uploading…" : "Upload files"}
-        </button>
-
+        {hasSelection && (
+          <button
+            type="button"
+            className="checklist-button storage-trash-button"
+            onClick={onDeleteSelected}
+            aria-label="Delete selected items"
+            title="Delete selected items"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M3 6h18" />
+              <path d="M8 6V4h8v2" />
+              <path d="m19 6-1 14H6L5 6" />
+              <path d="M10 11v5M14 11v5" />
+            </svg>
+            Delete
+          </button>
+        )}
+        {!hasSelection && (
+          <button
+            type="button"
+            className="checklist-button"
+            onClick={openFilePicker}
+            aria-disabled={isUploading}
+          >
+            {isUploading ? "Uploading…" : "Upload files"}
+          </button>
+        )}
         <input
           ref={inputRef}
           className="visually-hidden"
@@ -62,6 +94,13 @@ function StorageFolderContents({
         <ul className="storage-file-rows">
           {files.map((file) => (
             <li key={file.id}>
+              <input
+                type="checkbox"
+                className="storage-selection-checkbox"
+                checked={selectedFileIds.includes(file.id)}
+                onChange={() => onToggleFileSelection(file.id)}
+                aria-label={`Select file ${file.name}`}
+              />
               <button
                 type="button"
                 className="storage-file-row"

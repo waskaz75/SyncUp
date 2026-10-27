@@ -69,11 +69,12 @@ public class FileRepository {
         return folders;
     }
 
-    public boolean createFile(StoredFile file) throws SQLException {
+    public boolean createFile(StoredFile file, byte[] contents) throws SQLException {
         String sql = """
             INSERT INTO files
-                (file_id, user_id, folder_id, file_name, file_type, file_url, uploaded_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+                (file_id, user_id, folder_id, file_name, file_type, file_size,
+                    file_url, file_data, uploaded_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         try (Connection connection = JdbcConnector.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -86,31 +87,43 @@ public class FileRepository {
             }
             statement.setString(4, file.getFileName());
             statement.setString(5, file.getFileType());
-            statement.setString(6, file.getFileUrl());
-            statement.setObject(7, file.getUploadedAt());
+            statement.setLong(6, file.getFileSize());
+            statement.setString(7, file.getFileUrl());
+            statement.setBytes(8, contents);
+            statement.setObject(9, file.getUploadedAt());
             return statement.executeUpdate() == 1;
         }
     }
 
     public List<StoredFile> getFiles(UUID userId, UUID folderId)
             throws SQLException {
-        String sql = """
-            SELECT file_id, user_id, folder_id, file_name, file_type, file_url, uploaded_at
-            FROM files
-            WHERE user_id = ?
-              AND ((? IS NULL AND folder_id IS NULL) OR folder_id = ?)
-            ORDER BY uploaded_at DESC
-            """;
+        String sql = folderId == null
+                ? """
+                    SELECT file_id, user_id, folder_id, file_name, file_type,
+                        CASE WHEN file_size > 0 THEN file_size
+                            ELSE COALESCE(OCTET_LENGTH(file_data), 0) END
+                            AS file_size,
+                        file_url, uploaded_at
+                    FROM files
+                    WHERE user_id = ?
+                    ORDER BY uploaded_at DESC
+                    """
+                : """
+                    SELECT file_id, user_id, folder_id, file_name, file_type,
+                        CASE WHEN file_size > 0 THEN file_size
+                            ELSE COALESCE(OCTET_LENGTH(file_data), 0) END
+                            AS file_size,
+                        file_url, uploaded_at
+                    FROM files
+                    WHERE user_id = ? AND folder_id = ?
+                    ORDER BY uploaded_at DESC
+                    """;
         List<StoredFile> files = new ArrayList<>();
         try (Connection connection = JdbcConnector.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, userId.toString());
-            if (folderId == null) {
-                statement.setNull(2, java.sql.Types.CHAR);
-                statement.setNull(3, java.sql.Types.CHAR);
-            } else {
+            if (folderId != null) {
                 statement.setString(2, folderId.toString());
-                statement.setString(3, folderId.toString());
             }
             try (ResultSet results = statement.executeQuery()) {
                 while (results.next()) {
@@ -123,7 +136,10 @@ public class FileRepository {
 
     public StoredFile getFile(UUID fileId, UUID userId) throws SQLException {
         String sql = """
-            SELECT file_id, user_id, folder_id, file_name, file_type, file_url, uploaded_at
+            SELECT file_id, user_id, folder_id, file_name, file_type,
+                CASE WHEN file_size > 0 THEN file_size
+                    ELSE COALESCE(OCTET_LENGTH(file_data), 0) END AS file_size,
+                file_url, uploaded_at
             FROM files
             WHERE file_id = ? AND user_id = ?
             """;
@@ -137,6 +153,18 @@ public class FileRepository {
         }
     }
 
+    public byte[] getFileContents(UUID fileId, UUID userId) throws SQLException {
+        String sql = "SELECT file_data FROM files WHERE file_id = ? AND user_id = ?";
+        try (Connection connection = JdbcConnector.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, fileId.toString());
+            statement.setString(2, userId.toString());
+            try (ResultSet results = statement.executeQuery()) {
+                return results.next() ? results.getBytes("file_data") : null;
+            }
+        }
+    }
+
     public boolean deleteFile(UUID fileId, UUID userId) throws SQLException {
         String sql = "DELETE FROM files WHERE file_id = ? AND user_id = ?";
         try (Connection connection = JdbcConnector.getConnection();
@@ -144,6 +172,40 @@ public class FileRepository {
             statement.setString(1, fileId.toString());
             statement.setString(2, userId.toString());
             return statement.executeUpdate() == 1;
+        }
+    }
+
+    public boolean deleteFolder(UUID folderId, UUID userId) throws SQLException {
+        try (Connection connection = JdbcConnector.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                String deleteFiles = "DELETE FROM files "
+                        + "WHERE folder_id = ? AND user_id = ?";
+                try (PreparedStatement statement =
+                        connection.prepareStatement(deleteFiles)) {
+                    statement.setString(1, folderId.toString());
+                    statement.setString(2, userId.toString());
+                    statement.executeUpdate();
+                }
+
+                String deleteFolder = "DELETE FROM folders "
+                        + "WHERE folder_id = ? AND user_id = ?";
+                int deleted;
+                try (PreparedStatement statement =
+                        connection.prepareStatement(deleteFolder)) {
+                    statement.setString(1, folderId.toString());
+                    statement.setString(2, userId.toString());
+                    deleted = statement.executeUpdate();
+                }
+
+                connection.commit();
+                return deleted == 1;
+            } catch (SQLException exception) {
+                connection.rollback();
+                throw exception;
+            } finally {
+                connection.setAutoCommit(true);
+            }
         }
     }
 
@@ -165,6 +227,7 @@ public class FileRepository {
                 folderId == null ? null : UUID.fromString(folderId),
                 results.getString("file_name"),
                 results.getString("file_type"),
+                results.getLong("file_size"),
                 results.getString("file_url"),
                 results.getObject("uploaded_at", LocalDateTime.class));
     }

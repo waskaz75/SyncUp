@@ -1,205 +1,91 @@
-import { USERNAME_KEY } from "./homePageUtils";
-
-const FOLDERS_KEY = "syncup_storage_folders";
-const FILES_KEY = "syncup_storage_files";
-const DB_NAME = "syncup_storage";
-const DB_STORE = "files";
-const MOCK_DELAY_MS = 300;
+const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL || ""}/api/files`;
 
 export const MAX_UPLOAD_SIZE = 20 * 1024 * 1024;
 export const NOT_FOUND_CODE = "NOT_FOUND";
 
-function wait() {
-  return new Promise((resolve) => {
-    window.setTimeout(resolve, MOCK_DELAY_MS);
-  });
-}
-
-function getUserSuffix() {
-  const username = (localStorage.getItem(USERNAME_KEY) || "").trim();
-
-  return username || "guest";
-}
-
-function readList(baseKey) {
-  try {
-    const stored = JSON.parse(
-      localStorage.getItem(`${baseKey}_${getUserSuffix()}`)
-    );
-
-    return Array.isArray(stored) ? stored : [];
-  } catch {
-    return [];
+function getSessionId() {
+  const sessionId = localStorage.getItem("syncup_session_id");
+  if (!sessionId) {
+    throw new Error("You must be logged in to access your storage.");
   }
+  return sessionId;
 }
 
-function writeList(baseKey, list) {
-  localStorage.setItem(`${baseKey}_${getUserSuffix()}`, JSON.stringify(list));
+function buildUrl(path = "") {
+  const url = new URL(`${API_BASE_URL}${path}`, window.location.origin);
+  url.searchParams.set("sessionId", getSessionId());
+  return url.toString();
 }
 
-function createId() {
-  if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-
-  return `id-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+async function handleResponse(response) {
+  if (response.ok) return;
+  const message = await response.text();
+  const error = new Error(message || "Storage request failed.");
+  if (response.status === 404) error.code = NOT_FOUND_CODE;
+  throw error;
 }
 
-function createNotFoundError(message) {
-  const error = new Error(message);
-  error.code = NOT_FOUND_CODE;
-
-  return error;
+function convertFolder(folder) {
+  return { id: folder.folderId, name: folder.folderName };
 }
 
-function openDatabase() {
-  return new Promise((resolve, reject) => {
-    const request = window.indexedDB.open(DB_NAME, 1);
-
-    request.onupgradeneeded = () => {
-      request.result.createObjectStore(DB_STORE);
-    };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-}
-
-async function saveBlob(id, blob) {
-  const database = await openDatabase();
-
-  return new Promise((resolve, reject) => {
-    const transaction = database.transaction(DB_STORE, "readwrite");
-
-    transaction.objectStore(DB_STORE).put(blob, id);
-
-    transaction.oncomplete = () => {
-      database.close();
-      resolve();
-    };
-    transaction.onerror = () => {
-      database.close();
-      reject(transaction.error);
-    };
-    transaction.onabort = () => {
-      database.close();
-      reject(transaction.error || new Error("Saving the file was aborted"));
-    };
-  });
-}
-
-async function loadBlob(id) {
-  const database = await openDatabase();
-
-  return new Promise((resolve, reject) => {
-    const transaction = database.transaction(DB_STORE, "readonly");
-    const request = transaction.objectStore(DB_STORE).get(id);
-
-    transaction.oncomplete = () => {
-      database.close();
-      resolve(request.result);
-    };
-    transaction.onerror = () => {
-      database.close();
-      reject(transaction.error);
-    };
-  });
-}
-
-// TODO (Spring Boot): replace the mock below with
-//   const response = await fetch("http://localhost:8080/api/storage/folders", {
-//     method: "GET",
-//   });
-// then throw if !response.ok, and return the folders: [{ id, name }].
-export async function getFolders() {
-  await wait();
-
-  return readList(FOLDERS_KEY);
-}
-
-// TODO (Spring Boot): replace the mock below with
-//   const response = await fetch("http://localhost:8080/api/storage/folders", {
-//     method: "POST",
-//     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-//     body: new URLSearchParams({ name }),
-//   });
-// then throw if !response.ok, and return the created folder.
-export async function createFolder(name) {
-  await wait();
-
-  const newFolder = { id: createId(), name: name.trim() };
-
-  writeList(FOLDERS_KEY, [...readList(FOLDERS_KEY), newFolder]);
-
-  return newFolder;
-}
-
-// Returns the details of every file (no contents):
-// [{ id, folderId, name, type, size, uploadedAt }]
-// TODO (Spring Boot): replace the mock below with
-//   const response = await fetch("http://localhost:8080/api/storage/files", {
-//     method: "GET",
-//   });
-// then throw if !response.ok, and return the file list from the response.
-export async function getFiles() {
-  await wait();
-
-  return readList(FILES_KEY);
-}
-
-// TODO (Spring Boot): replace the mock below with
-//   const formData = new FormData();
-//   formData.append("file", file);
-//   const response = await fetch(
-//     `http://localhost:8080/api/storage/folders/${folderId}/files`,
-//     {
-//       method: "POST",
-//       body: formData, // do NOT set Content-Type; the browser adds it for files
-//     }
-//   );
-// If the response is 404, throw an error with code NOT_FOUND_CODE.
-// Otherwise return the created file details from the response.
-export async function uploadFile(folderId, file) {
-  await wait();
-
-  if (!readList(FOLDERS_KEY).some((folder) => folder.id === folderId)) {
-    throw createNotFoundError("Folder not found");
-  }
-
-  const details = {
-    id: createId(),
-    folderId,
-    name: file.name,
-    type: file.type,
-    size: file.size,
-    uploadedAt: new Date().toISOString(),
+function convertFile(file) {
+  return {
+    id: file.fileId,
+    folderId: file.folderId,
+    name: file.fileName,
+    type: file.fileType || "application/octet-stream",
+    size: file.fileSize,
+    uploadedAt: file.uploadedAt,
   };
-
-  await saveBlob(details.id, file);
-
-  writeList(FILES_KEY, [...readList(FILES_KEY), details]);
-
-  return details;
 }
 
-// Returns the file's contents as a Blob.
-// TODO (Spring Boot): replace the mock below with
-//   const response = await fetch(`http://localhost:8080/api/storage/files/${id}`, {
-//     method: "GET",
-//   });
-// If the response is 404, throw an error with code NOT_FOUND_CODE.
-// Otherwise return await response.blob().
+export async function getFolders() {
+  const response = await fetch(buildUrl("/folders"));
+  await handleResponse(response);
+  return (await response.json()).map(convertFolder);
+}
+
+export async function createFolder(name) {
+  const response = await fetch(buildUrl("/folders"), {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ name: name.trim() }),
+  });
+  await handleResponse(response);
+  return convertFolder(await response.json());
+}
+
+export async function getFiles() {
+  const response = await fetch(buildUrl());
+  await handleResponse(response);
+  return (await response.json()).map(convertFile);
+}
+
+export async function uploadFile(folderId, file) {
+  const formData = new FormData();
+  formData.append("file", file);
+  const url = new URL(buildUrl("/upload"));
+  if (folderId) url.searchParams.set("folderId", folderId);
+  const response = await fetch(url, { method: "POST", body: formData });
+  await handleResponse(response);
+  return convertFile(await response.json());
+}
+
 export async function getFileBlob(id) {
-  await wait();
+  const response = await fetch(buildUrl(`/${id}/download`));
+  await handleResponse(response);
+  return response.blob();
+}
 
-  if (!readList(FILES_KEY).some((file) => file.id === id)) {
-    throw createNotFoundError("File not found");
-  }
+export async function deleteFile(id) {
+  const response = await fetch(buildUrl(`/${id}`), { method: "DELETE" });
+  await handleResponse(response);
+}
 
-  const blob = await loadBlob(id);
-
-  if (!blob) {
-    throw createNotFoundError("File contents not found");
-  }
-
-  return blob;
+export async function deleteFolder(id) {
+  const response = await fetch(buildUrl(`/folders/${id}`), {
+    method: "DELETE",
+  });
+  await handleResponse(response);
 }

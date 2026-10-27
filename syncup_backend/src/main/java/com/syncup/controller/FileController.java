@@ -5,8 +5,6 @@ import com.syncup.model.Folder;
 import com.syncup.model.StoredFile;
 import com.syncup.service.FileService;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.UUID;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.ContentDisposition;
@@ -69,6 +67,16 @@ public class FileController {
         return ResponseEntity.ok(fileService.getFiles(userId, folderId));
     }
 
+    @DeleteMapping("/folders/{folderId}")
+    public ResponseEntity<?> deleteFolder(
+            @RequestParam UUID sessionId,
+            @PathVariable UUID folderId) throws java.sql.SQLException {
+        UUID userId = authenticatedUser(sessionId);
+        return fileService.deleteFolder(userId, folderId)
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
+    }
+
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> upload(
             @RequestParam UUID sessionId,
@@ -85,29 +93,32 @@ public class FileController {
             @RequestParam UUID sessionId,
             @PathVariable UUID fileId) throws java.sql.SQLException, IOException {
         UUID userId = authenticatedUser(sessionId);
-        Path path = fileService.getFilePath(userId, fileId);
-        if (path == null) {
+        StoredFile file = fileService.getFile(fileId, userId);
+        byte[] contents = fileService.getFileContents(userId, fileId);
+        if (file == null) {
             return ResponseEntity.notFound().build();
         }
-
-        String fileName = fileService.getFileName(userId, fileId);
-        MediaType contentType = MediaType.APPLICATION_OCTET_STREAM;
-        String detectedType = Files.probeContentType(path);
-        if (detectedType != null) {
-            contentType = MediaType.parseMediaType(detectedType);
+        if (contents == null) {
+            return ResponseEntity.status(HttpStatus.GONE)
+                    .body("This file has no stored contents.");
         }
-        ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
+
+        MediaType contentType = MediaType.parseMediaType(
+                file.getFileType() == null
+                        ? MediaType.APPLICATION_OCTET_STREAM_VALUE
+                        : file.getFileType());
+        ByteArrayResource resource = new ByteArrayResource(contents);
         return ResponseEntity.ok()
                 .contentType(contentType)
                 .header(HttpHeaders.CONTENT_DISPOSITION,
-                        ContentDisposition.attachment().filename(fileName).build().toString())
+                        ContentDisposition.attachment().filename(file.getFileName()).build().toString())
                 .body(resource);
     }
 
     @DeleteMapping("/{fileId}")
     public ResponseEntity<?> delete(
             @RequestParam UUID sessionId,
-            @PathVariable UUID fileId) throws java.sql.SQLException, IOException {
+            @PathVariable UUID fileId)             throws java.sql.SQLException {
         UUID userId = authenticatedUser(sessionId);
         return fileService.deleteFile(userId, fileId)
                 ? ResponseEntity.noContent().build()

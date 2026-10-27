@@ -4,6 +4,7 @@ import StorageFileViewer from "./StorageFileViewer";
 import StorageFolderContents from "./StorageFolderContents";
 import StorageFolderModal from "./StorageFolderModal";
 import StorageSidebar from "./StorageSidebar";
+import ModalShell from "./ModalShell";
 import {
   MAX_UPLOAD_SIZE,
   NOT_FOUND_CODE,
@@ -11,6 +12,8 @@ import {
   getFiles,
   getFolders,
   uploadFile,
+  deleteFile,
+  deleteFolder,
 } from "./storageApi";
 
 function StoragePage() {
@@ -25,6 +28,9 @@ function StoragePage() {
 
   const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedFolderIds, setSelectedFolderIds] = useState([]);
+  const [selectedFileIds, setSelectedFileIds] = useState([]);
+  const [deleteRequest, setDeleteRequest] = useState(null);
 
   const headingRef = useRef(null);
   const focusHeadingRef = useRef(false);
@@ -44,7 +50,62 @@ function StoragePage() {
     } finally {
       setIsLoading(false);
     }
+
   }, []);
+
+  function toggleSelection(setter, id) {
+    setter((current) =>
+      current.includes(id)
+        ? current.filter((item) => item !== id)
+        : [...current, id]
+    );
+  }
+
+  function requestDeleteSelected() {
+    const foldersToDelete = folders.filter((folder) =>
+      selectedFolderIds.includes(folder.id)
+    );
+    const filesToDelete = files.filter((file) =>
+      selectedFileIds.includes(file.id)
+    );
+    if (foldersToDelete.length === 0 && filesToDelete.length === 0) return;
+
+    setDeleteRequest({ folders: foldersToDelete, files: filesToDelete });
+  }
+
+  async function handleDeleteSelected() {
+    if (!deleteRequest) return;
+    const { folders: foldersToDelete, files: filesToDelete } = deleteRequest;
+    setDeleteRequest(null);
+    try {
+      await Promise.all([
+        ...foldersToDelete.map((folder) => deleteFolder(folder.id)),
+        ...filesToDelete.map((file) => deleteFile(file.id)),
+      ]);
+      const deletedFolderIds = new Set(foldersToDelete.map((folder) => folder.id));
+      const deletedFileIds = new Set(filesToDelete.map((file) => file.id));
+      setFolders((current) =>
+        current.filter((folder) => !deletedFolderIds.has(folder.id))
+      );
+      setFiles((current) =>
+        current.filter(
+          (file) =>
+            !deletedFileIds.has(file.id) && !deletedFolderIds.has(file.folderId)
+        )
+      );
+      setSelectedFolderIds([]);
+      setSelectedFileIds([]);
+      if (selectedFolderId && deletedFolderIds.has(selectedFolderId)) {
+        setSelectedFolderId(null);
+      }
+      if (openFileId && deletedFileIds.has(openFileId)) {
+        setOpenFileId(null);
+      }
+    } catch (deleteError) {
+      console.error("Deleting selected storage items failed:", deleteError);
+      setError("Could not delete the selected items.");
+    }
+  }
 
   useEffect(() => {
     loadAll();
@@ -207,6 +268,10 @@ function StoragePage() {
           folderName={openFileFolder?.name ?? "folder"}
           headingRef={headingRef}
           onBack={handleBack}
+          hasSelection={
+            selectedFolderIds.length > 0 || selectedFileIds.length > 0
+          }
+          onDeleteSelected={requestDeleteSelected}
         />
       );
     }
@@ -220,6 +285,14 @@ function StoragePage() {
           headingRef={headingRef}
           onUpload={handleUpload}
           onOpenFile={handleOpenFile}
+          selectedFileIds={selectedFileIds}
+          onToggleFileSelection={(id) =>
+            toggleSelection(setSelectedFileIds, id)
+          }
+          hasSelection={
+            selectedFolderIds.length > 0 || selectedFileIds.length > 0
+          }
+          onDeleteSelected={requestDeleteSelected}
         />
       );
     }
@@ -270,6 +343,14 @@ function StoragePage() {
             onToggleFolder={handleToggleFolder}
             onOpenFile={handleOpenFile}
             onNewFolder={() => setIsFolderModalOpen(true)}
+            selectedFolderIds={selectedFolderIds}
+            selectedFileIds={selectedFileIds}
+            onToggleFolderSelection={(id) =>
+              toggleSelection(setSelectedFolderIds, id)
+            }
+            onToggleFileSelection={(id) =>
+              toggleSelection(setSelectedFileIds, id)
+            }
           />
 
           <div className="storage-main">{renderMain()}</div>
@@ -282,6 +363,44 @@ function StoragePage() {
           onSubmit={handleCreateFolder}
           onClose={() => setIsFolderModalOpen(false)}
         />
+      )}
+      {deleteRequest && (
+        <ModalShell
+          labelledBy="storage-delete-title"
+          onClose={() => setDeleteRequest(null)}
+        >
+          <h2 id="storage-delete-title">Delete selected items?</h2>
+          <p className="storage-delete-message">
+            {deleteRequest.folders.length > 0 &&
+              `${deleteRequest.folders.length} folder${
+                deleteRequest.folders.length === 1 ? "" : "s"
+              }`}
+            {deleteRequest.folders.length > 0 &&
+              deleteRequest.files.length > 0 &&
+              " and "}
+            {deleteRequest.files.length > 0 &&
+              `${deleteRequest.files.length} file${
+                deleteRequest.files.length === 1 ? "" : "s"
+              }`}
+            {" will be permanently deleted."}
+          </p>
+          <div className="checklist-modal-actions">
+            <button
+              type="button"
+              className="checklist-button checklist-button-secondary"
+              onClick={() => setDeleteRequest(null)}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="checklist-button storage-danger-button"
+              onClick={handleDeleteSelected}
+            >
+              Delete
+            </button>
+          </div>
+        </ModalShell>
       )}
     </section>
   );

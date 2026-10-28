@@ -1,5 +1,8 @@
 
-const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL || ""}/api/calendar`;
+const API_BASE_URL = `${(import.meta.env.VITE_API_BASE_URL || "").replace(
+  /\/+$/,
+  ""
+)}/api/calendar`;
 
 export const NOT_FOUND_CODE = "NOT_FOUND";
 
@@ -20,7 +23,10 @@ function getSessionId() {
 
 // Build the backend URL with the user's session ID.
 function buildUrl(path = "") {
-  const url = new URL(`${API_BASE_URL}${path}`);
+  const url = new URL(
+    `${API_BASE_URL}${path}`,
+    window.location.origin
+  );
 
   url.searchParams.set("sessionId", getSessionId());
 

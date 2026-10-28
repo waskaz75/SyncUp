@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,8 +32,8 @@ public class CalendarEventRepository {
             stmt.setString(2, event.getUserId().toString());
             stmt.setString(3, event.getTitle());
             stmt.setString(4, event.getDescription());
-            stmt.setObject(5, event.getStartDatetime());
-            stmt.setObject(6, event.getEndDatetime());
+            stmt.setTimestamp(5, Timestamp.valueOf(event.getStartDatetime()));
+            stmt.setTimestamp(6, Timestamp.valueOf(event.getEndDatetime()));
             stmt.setString(7, event.getLocation());
 
             return stmt.executeUpdate() == 1;
@@ -67,10 +68,10 @@ public class CalendarEventRepository {
                             UUID.fromString(rs.getString("user_id")),
                             rs.getString("title"),
                             rs.getString("description"),
-                            rs.getObject("start_datetime", LocalDateTime.class),
-                            rs.getObject("end_datetime", LocalDateTime.class),
+                            rs.getTimestamp("start_datetime").toLocalDateTime(),
+                            rs.getTimestamp("end_datetime").toLocalDateTime(),
                             rs.getString("location"),
-                            rs.getObject("created_at", LocalDateTime.class)
+                            rs.getTimestamp("created_at").toLocalDateTime()
                     );
 
                     events.add(event);
@@ -99,8 +100,8 @@ public class CalendarEventRepository {
 
             stmt.setString(1, event.getTitle());
             stmt.setString(2, event.getDescription());
-            stmt.setObject(3, event.getStartDatetime());
-            stmt.setObject(4, event.getEndDatetime());
+            stmt.setTimestamp(3, Timestamp.valueOf(event.getStartDatetime()));
+            stmt.setTimestamp(4, Timestamp.valueOf(event.getEndDatetime()));
             stmt.setString(5, event.getLocation());
             stmt.setString(6, event.getEventId().toString());
             stmt.setString(7, event.getUserId().toString());

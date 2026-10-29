@@ -100,38 +100,45 @@ export function useUser() {
 }
 
 export async function generateBackgroundImage(prompt) {
-  // TODO: Replace with backend image generation integration.
-  await new Promise((resolve) => {
-    window.setTimeout(resolve, 900);
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "";
+  const response = await fetch(`${apiBaseUrl}/api/images/generate`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({ prompt: prompt.trim() }),
   });
 
-  const safePrompt = prompt.slice(0, 42);
-  const canvas = document.createElement("canvas");
-  canvas.width = 1600;
-  canvas.height = 900;
+  const payload = await response.json();
 
-  const context = canvas.getContext("2d");
-  if (!context) {
-    return DEFAULT_BACKGROUND_SRC;
+  if (!response.ok || !payload.imageUrl) {
+    throw new Error(payload.error || "Image generation failed.");
   }
 
-  const gradient = context.createLinearGradient(0, 0, 1600, 900);
-  gradient.addColorStop(0, "#7656b7");
-  gradient.addColorStop(0.5, "#d27fc0");
-  gradient.addColorStop(1, "#332b50");
+  return payload.imageUrl;
+}
 
-  context.fillStyle = gradient;
-  context.fillRect(0, 0, 1600, 900);
+export function getImageThemeColor(source) {
+  return new Promise((resolve) => {
+    const image = new Image();
 
-  context.fillStyle = "rgba(255, 255, 255, 0.22)";
-  context.beginPath();
-  context.arc(220, 150, 180, 0, Math.PI * 2);
-  context.fill();
+    image.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1;
+      canvas.height = 1;
+      const context = canvas.getContext("2d", { willReadFrequently: true });
 
-  context.fillStyle = "#ffffff";
-  context.font = "700 60px DM Sans, sans-serif";
-  context.textAlign = "center";
-  context.fillText(safePrompt, 800, 470);
+      if (!context) {
+        resolve(null);
+        return;
+      }
 
-  return canvas.toDataURL("image/png");
+      context.drawImage(image, 0, 0, 1, 1);
+      const [red, green, blue] = context.getImageData(0, 0, 1, 1).data;
+      resolve({ red, green, blue });
+    };
+
+    image.onerror = () => resolve(null);
+    image.src = source;
+  });
 }

@@ -20,6 +20,7 @@ import {
   normalizeRoute,
   routeExists,
   sanitizeBackgroundSource,
+  getImageThemeColor,
 } from "./components/homePageUtils";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
@@ -682,6 +683,28 @@ function HomePage({ onLogout }) {
       window.removeEventListener("popstate", handlePopState);
     };
   }, []);
+
+  useEffect(() => {
+    getImageThemeColor(backgroundSrc).then((color) => {
+      if (!color) return;
+
+      const { red, green, blue } = color;
+      const root = document.documentElement;
+      root.style.setProperty("--color-brand-main", `rgb(${red}, ${green}, ${blue})`);
+      root.style.setProperty(
+        "--color-brand-accent",
+        `rgb(${Math.min(255, red + 55)}, ${Math.min(255, green + 55)}, ${Math.min(255, blue + 55)})`
+      );
+      root.style.setProperty(
+        "--color-brand-light",
+        `rgb(${Math.min(255, red + 150)}, ${Math.min(255, green + 150)}, ${Math.min(255, blue + 150)})`
+      );
+      root.style.setProperty(
+        "--color-surface-muted",
+        `rgba(${Math.max(0, red - 30)}, ${Math.max(0, green - 30)}, ${Math.max(0, blue - 30)}, 0.78)`
+      );
+    });
+  }, [backgroundSrc]);
 
   function navigateTo(path) {
     if (path === activePath || !routeExists(path)) {

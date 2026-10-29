@@ -44,8 +44,8 @@ button {
   color: white;
   background:
     radial-gradient(circle at 15% 20%, rgba(255, 184, 226, 0.7), transparent 28%),
-    radial-gradient(circle at 80% 80%, rgba(133, 103, 238, 0.55), transparent 32%),
-    linear-gradient(145deg, #7556b9, #a969bd 50%, #e49acb);
+    radial-gradient(circle at 80% 80%, color-mix(in srgb, var(--color-brand-main) 55%, transparent), transparent 32%),
+    linear-gradient(145deg, var(--color-brand-main), var(--color-brand-deep) 50%, var(--color-brand-accent));
 }
 
 .brand-panel::after {
@@ -90,14 +90,14 @@ button {
 
 .eyebrow {
   margin: 0 0 15px;
-  color: #a646cb;
+  color: var(--color-brand-accent);
   font-size: 19px;
   font-weight: 900;
   letter-spacing: 0.18em;
 }
 
 .brand-panel .eyebrow {
-  color: #f9d8ef;
+  color: var(--color-brand-light);
 }
 
 .brand-panel h1 {
@@ -166,7 +166,7 @@ button {
 }
 
 .mobile-brand .brand-mark {
-  background: linear-gradient(135deg, #7658b8, #d783c2);
+  background: linear-gradient(135deg, var(--color-brand-main), var(--color-brand-accent));
 }
 
 .form-heading h2 {
@@ -202,7 +202,7 @@ button {
 }
 
 .mode-switcher button.active {
-  color: #7152b6;
+  color: var(--color-brand-main);
 }
 
 .mode-switcher button.active::after {
@@ -213,7 +213,7 @@ button {
   left: 0;
   height: 2px;
   border-radius: 2px;
-  background: #9d66c7;
+  background: var(--color-brand-main);
 }
 
 form {
@@ -245,8 +245,8 @@ input::placeholder {
 }
 
 input:focus {
-  border-color: #a86dca;
-  box-shadow: 0 0 0 4px rgba(168, 109, 202, 0.12);
+  border-color: var(--color-brand-accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-brand-accent) 12%, transparent);
 }
 
 .label-row {
@@ -264,7 +264,7 @@ input:focus {
 .back-button {
   padding: 0;
   border: 0;
-  color: #8e5fc1;
+  color: var(--color-brand-main);
   background: transparent;
   font-size: 12px;
 }
@@ -279,15 +279,15 @@ input:focus {
   border: 0;
   border-radius: 10px;
   color: white;
-  background: linear-gradient(100deg, #7655b7, #d27fc0);
-  box-shadow: 0 12px 22px rgba(121, 82, 180, 0.2);
+  background: linear-gradient(100deg, var(--color-brand-main), var(--color-brand-accent));
+  box-shadow: 0 12px 22px color-mix(in srgb, var(--color-brand-main) 20%, transparent);
   font-weight: 700;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .primary-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 15px 25px rgba(121, 82, 180, 0.28);
+  box-shadow: 0 15px 25px color-mix(in srgb, var(--color-brand-main) 28%, transparent);
 }
 
 .primary-button span {
@@ -326,7 +326,7 @@ input:focus {
 }
 
 .security-note span {
-  color: #b170c8;
+  color: var(--color-brand-accent);
 }
 
 .centered-layout {
@@ -359,7 +359,7 @@ input:focus {
   margin: 0 auto 28px;
   border-radius: 19px;
   color: white;
-  background: linear-gradient(135deg, #7655b7, #d27fc0);
+  background: linear-gradient(135deg, var(--color-brand-main), var(--color-brand-accent));
   font-size: 26px;
 }
 
@@ -424,14 +424,14 @@ input:focus {
 }
 
 .nav-logo .brand-mark {
-  background: linear-gradient(135deg, #7658b8, #d783c2);
+  background: linear-gradient(135deg, var(--color-brand-main), var(--color-brand-accent));
 }
 
 .logout-button {
   padding: 10px 15px;
   border: 1px solid #e2d9e9;
   border-radius: 8px;
-  color: #7553b4;
+  color: var(--color-brand-main);
   background: white;
   font-size: 12px;
   font-weight: 700;
@@ -481,7 +481,7 @@ input:focus {
 .dashboard-card.gradient-card {
   color: white;
   border: 0;
-  background: linear-gradient(135deg, #7656b7, #d88bc5);
+  background: linear-gradient(135deg, var(--color-brand-main), var(--color-brand-accent));
 }
 
 .card-icon {
@@ -492,11 +492,11 @@ input:focus {
 }
 
 .purple-icon {
-  color: #7656b7;
+  color: var(--color-brand-main);
 }
 
 .pink-icon {
-  color: #d583be;
+  color: var(--color-brand-accent);
 }
 
 .dashboard-card h2 {
@@ -568,17 +568,17 @@ input:focus {
 }
 :root {
   --color-text-primary: #29243d;
-  --color-brand-deep: #332b50;
+  --color-brand-deep: color-mix(in srgb, var(--color-brand-main) 45%, #000000);
   --color-brand-main: #7656b7;
   --color-brand-accent: #d27fc0;
   --color-brand-light: #ffeaf9;
   --color-white: #ffffff;
-  --color-surface-dark: #1f1833;
+  --color-surface-dark: color-mix(in srgb, var(--color-brand-main) 28%, #000000);
   --color-surface-muted: rgba(51, 43, 80, 0.72);
   --overlay-center-opacity: 0.15;
   --overlay-edge-opacity: 0.7;
   --overlay-clear-radius: 25%;
-  --focus-ring: 0 0 0 3px rgba(210, 127, 192, 0.45);
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--color-brand-accent) 45%, transparent);
 }
 
 .home-app-shell {
@@ -756,7 +756,7 @@ input:focus {
   border: 1px solid rgba(255, 255, 255, 0.24);
   border-radius: 20px;
   color: var(--color-white);
-  background: rgba(31, 24, 51, 0.58);
+  background: color-mix(in srgb, var(--color-surface-dark) 58%, transparent);
   box-shadow: 0 24px 60px rgba(16, 10, 31, 0.22);
   backdrop-filter: blur(10px);
 }
@@ -834,7 +834,7 @@ input:focus {
 .timer-presets button:hover,
 .timer-presets button.active {
   border-color: var(--color-brand-accent);
-  background: rgba(210, 127, 192, 0.28);
+  background: color-mix(in srgb, var(--color-brand-accent) 28%, transparent);
 }
 
 .timer-presets strong {
@@ -960,6 +960,18 @@ input:focus {
   gap: 10px;
 }
 
+.background-upload-error,
+.chatbot-error,
+.checklist-field-error,
+.calendar-conflict,
+.profile-message[role="alert"],
+.storage-status[role="alert"],
+.message.error {
+  border: 1px solid var(--color-brand-accent);
+  color: var(--color-brand-light);
+  background: var(--color-surface-dark);
+}
+
 .background-upload-error {
   margin: 0;
   padding: 8px 10px;
@@ -1056,7 +1068,7 @@ input:focus {
 
 .chatbot-message.user {
   align-self: flex-end;
-  background: rgba(210, 127, 192, 0.45);
+  background: color-mix(in srgb, var(--color-brand-accent) 45%, transparent);
 }
 
 .chatbot-message p {

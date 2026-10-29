@@ -55,7 +55,7 @@ function ChatbotPanel({ onSetBackground }) {
         {
           id: `assistant-${Date.now()}`,
           role: "assistant",
-          text: "Here is your generated background preview.",
+          text: "Here is your generated image preview. Choose whether to use it as your background.",
           imageUrl,
         },
       ]);

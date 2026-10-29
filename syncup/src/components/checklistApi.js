@@ -17,7 +17,7 @@ function getSessionId() {
 
 // Build the backend URL with the user's session ID.
 function buildUrl(path = "") {
-  const url = new URL(`${API_BASE_URL}${path}`);
+  const url = new URL(`${API_BASE_URL}${path}`, window.location.origin);
 
   url.searchParams.set("sessionId", getSessionId());
 

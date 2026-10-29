@@ -33,6 +33,10 @@ export const HOME_ROUTES = [
     path: "/timer",
   },
   {
+    label: "Study Buddy AI",
+    path: "/study-buddy",
+  },
+  {
     label: "Comms Channel",
     path: "/comms",
   },

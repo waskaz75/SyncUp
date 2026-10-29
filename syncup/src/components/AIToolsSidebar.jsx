@@ -1,21 +1,9 @@
 import { useState } from "react";
 
 import ChatbotPanel from "./ChatbotPanel";
-import StudyBuddyPanel from "./StudyBuddyPanel";
-
-const AI_TOOLS = {
-  background: "background",
-  studyBuddy: "studyBuddy",
-};
 
 function AIToolsSidebar({ onSetBackground }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTool, setActiveTool] = useState(AI_TOOLS.background);
-
-  function toggleTool(tool) {
-    setActiveTool(tool);
-    setIsOpen(true);
-  }
 
   function closeSidebar() {
     setIsOpen(false);
@@ -41,42 +29,19 @@ function AIToolsSidebar({ onSetBackground }) {
         <div className="ai-tools-tabs" role="tablist" aria-label="AI tools">
           <button
             type="button"
-            role="tab"
-            aria-selected={activeTool === AI_TOOLS.background}
-            className={`ai-tools-tab ${
-              activeTool === AI_TOOLS.background ? "active" : ""
-            }`}
-            onClick={() => toggleTool(AI_TOOLS.background)}
+            className="ai-tools-tab active"
+            onClick={() => setIsOpen(true)}
           >
             <span aria-hidden="true">✦</span>
             <span>Background AI</span>
           </button>
-
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTool === AI_TOOLS.studyBuddy}
-            className={`ai-tools-tab ${
-              activeTool === AI_TOOLS.studyBuddy ? "active" : ""
-            }`}
-            onClick={() => toggleTool(AI_TOOLS.studyBuddy)}
-          >
-            <span aria-hidden="true">☼</span>
-            <span>Study Buddy AI</span>
-          </button>
         </div>
 
         <div className="ai-tools-panel">
-          {activeTool === AI_TOOLS.background && (
-            <ChatbotPanel
-              onClose={closeSidebar}
-              onSetBackground={onSetBackground}
-            />
-          )}
-
-          {activeTool === AI_TOOLS.studyBuddy && (
-            <StudyBuddyPanel onClose={closeSidebar} />
-          )}
+          <ChatbotPanel
+            onClose={closeSidebar}
+            onSetBackground={onSetBackground}
+          />
         </div>
       </aside>
     </>

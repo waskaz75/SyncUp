@@ -10,6 +10,7 @@ import ChecklistPage from "./components/ChecklistPage";
 import CalendarPage from "./components/CalendarPage";
 import TimerPage from "./components/TimerPage";
 import StoragePage from "./components/StoragePage";
+import StudyBuddyPanel from "./components/StudyBuddyPanel";
 import {
   BACKGROUND_STORAGE_KEY,
   DEFAULT_BACKGROUND_SRC,
@@ -742,6 +743,10 @@ function HomePage({ onLogout }) {
 
     if (activePath === "/timer") {
       return <TimerPage />;
+    }
+
+    if (activePath === "/study-buddy") {
+      return <StudyBuddyPanel onClose={() => navigateTo("/")} />;
     }
 
     if (activePath === "/storage") {

@@ -1326,7 +1326,7 @@ input:focus {
 
 .chatbot-message p {
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.0;
 }
 
 .ai-loading {
@@ -2802,5 +2802,108 @@ input:focus {
 @media (prefers-reduced-motion: reduce) {
   .storage-chevron {
     transition: none;
+  }
+}
+
+/* ============================================================
+   STUDY BUDDY PAGE
+   (bubbles, spinner and markdown reuse the chatbot- / ai- classes)
+   ============================================================ */
+
+.studybuddy-page {
+  width: 100%;
+  max-width: 1200px;
+  height: 100%;
+  min-height: 0;
+  align-self: stretch;
+}
+
+.studybuddy-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 16px;
+  color: var(--color-white);
+  background: color-mix(in srgb, var(--color-surface-dark) 58%, transparent); 
+  box-shadow: 0 24px 60px rgba(16, 10, 31, 0.22);
+  backdrop-filter: blur(10px); 
+}
+
+.studybuddy-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.studybuddy-header h1 {
+  margin: 0;
+  font-size: clamp(22px, 4vw, 30px);
+}
+
+.studybuddy-header p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.studybuddy-messages {
+  min-height: 0;
+  padding: 20px;
+  gap: 14px;
+}
+
+.studybuddy-messages .chatbot-message {
+  width: fit-content;
+  max-width: min(80%, 680px);
+  align-self: flex-start;
+  overflow-wrap: anywhere;
+}
+
+.studybuddy-messages .chatbot-message.user {
+  align-self: flex-end;
+}
+
+.studybuddy-error {
+  margin: 0 20px 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.studybuddy-page .chatbot-form {
+  flex-direction: row;
+  align-items: stretch;
+  padding: 14px 20px;
+}
+
+.studybuddy-page .chatbot-form input {
+  flex: 1;
+  min-width: 0;
+}
+
+.studybuddy-page .chatbot-form input[aria-invalid="true"] {
+  border-color: var(--color-brand-accent);
+  box-shadow: var(--focus-ring);
+}
+
+.studybuddy-page .chatbot-form button {
+  flex-shrink: 0;
+  padding: 10px 18px;
+  font-weight: 700;
+}
+
+@media (max-width: 600px) {
+  .studybuddy-header,
+  .studybuddy-messages {
+    padding: 14px;
+  }
+
+  .studybuddy-messages .chatbot-message {
+    max-width: 92%;
+  }
+
+  .studybuddy-page .chatbot-form {
+    padding: 12px 14px;
   }
 }

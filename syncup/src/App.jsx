@@ -24,6 +24,7 @@ import {
   sanitizeBackgroundSource,
   getImageThemeColor,
 } from "./components/homePageUtils";
+import CommsPage from "./components/CommsPage";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
@@ -752,6 +753,10 @@ function HomePage({ onLogout }) {
 
     if (activePath === "/storage") {
       return <StoragePage />;
+    }
+
+    if (activePath === "/comms") {
+      return <CommsPage />;
     }
 
     return (

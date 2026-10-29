@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-
 import { ALLOWED_IMAGE_TYPES, useUser } from "./homePageUtils";
 import { getProfilePicture, updateProfilePicture } from "./profileApi";
+import { PROFILE_PICTURE_CHANGED_EVENT } from "./useProfilePicture";
 
 const MAX_PROFILE_FILE_SIZE = 5 * 1024 * 1024;
 
@@ -144,8 +144,6 @@ function ProfileMenu({ onLogout }) {
 
   async function handleFileChange(event) {
     const file = event.target.files?.[0];
-
-    // Reset so choosing the same file again still triggers onChange.
     event.target.value = "";
 
     if (!file) {
@@ -166,7 +164,10 @@ function ProfileMenu({ onLogout }) {
     setIsUploading(true);
 
     try {
-      setPicture(await updateProfilePicture(file));
+      const newPicture = await updateProfilePicture(file);
+
+      setPicture(newPicture);
+      window.dispatchEvent(new Event(PROFILE_PICTURE_CHANGED_EVENT));
     } catch (uploadError) {
       console.error("Updating profile picture failed:", uploadError);
       setError("Could not update your picture. Please try again.");

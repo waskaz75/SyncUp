@@ -2,10 +2,9 @@ import { useEffect, useRef, useState } from "react";
 
 import { generateBackgroundImage } from "./homePageUtils";
 
-function ChatbotPanel({ onSetBackground }) {
+function ChatbotPanel({ onClose, onSetBackground }) {
   const messageEndRef = useRef(null);
 
-  const [isOpen, setIsOpen] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -22,7 +21,7 @@ function ChatbotPanel({ onSetBackground }) {
       behavior: "smooth",
       block: "end",
     });
-  }, [messages, isLoading, isOpen]);
+  }, [messages, isLoading]);
 
   async function handleSend(event) {
     event.preventDefault();
@@ -78,30 +77,15 @@ function ChatbotPanel({ onSetBackground }) {
   }
 
   return (
-    <>
-      {!isOpen && (
-        <button
-          type="button"
-          className="floating-button chat-toggle"
-          onClick={() => setIsOpen(true)}
-          aria-label="Open background chat"
-        >
-          Chat
-        </button>
-      )}
-
-      <aside
-        className={`chatbot-panel ${isOpen ? "open" : ""}`}
-        aria-label="Background chatbot"
-      >
+    <section className="chatbot-panel" aria-label="Background AI image generator">
         <header className="chatbot-header">
-          <h2>Background Builder</h2>
+          <h2>Background AI Image</h2>
 
           <button
             type="button"
-            onClick={() => setIsOpen(false)}
+            onClick={onClose}
             className="chatbot-close"
-            aria-label="Close chat"
+            aria-label="Close background AI image generator"
           >
             ×
           </button>
@@ -182,8 +166,7 @@ function ChatbotPanel({ onSetBackground }) {
             Send
           </button>
         </form>
-      </aside>
-    </>
+    </section>
   );
 }
 

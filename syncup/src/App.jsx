@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import "./index.css";
 import BackgroundLayer from "./components/BackgroundLayer";
 import BackgroundUploadButton from "./components/BackgroundUploadButton";
-import ChatbotPanel from "./components/ChatbotPanel";
+import AIToolsSidebar from "./components/AIToolsSidebar";
 import NavBar from "./components/NavBar";
 import WelcomeMessage from "./components/WelcomeMessage";
 import ChecklistPage from "./components/ChecklistPage";
@@ -773,8 +773,7 @@ function HomePage({ onLogout }) {
 
         <div hidden={activePath !== "/"}>
           <BackgroundUploadButton onBackgroundChange={updateBackground} />
-
-          <ChatbotPanel onSetBackground={updateBackground} />
+          <AIToolsSidebar onSetBackground={updateBackground} />
         </div>
       </div>
     </div>

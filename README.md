@@ -97,6 +97,9 @@ The backend deployment must have the following configured:
 
 - The `SYNCUP_DB_PASSWORD` database password
 - The SMTP variables listed above
+- `CLOUDFLARE_API_TOKEN` with Workers AI run permission
+- `CLOUDFLARE_ACCOUNT_ID`
+- Optional `CLOUDFLARE_STUDY_BUDDY_MODEL` (defaults to `@cf/meta/llama-3.2-3b-instruct`)
 - Network access to the Amazon RDS instance
 - CORS access for the deployed Vercel frontend origin
 

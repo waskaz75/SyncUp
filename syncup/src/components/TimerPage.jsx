@@ -22,6 +22,7 @@ function TimerPage() {
   const [remainingSeconds, setRemainingSeconds] = useState(25 * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [customMinutes, setCustomMinutes] = useState(25);
+  const [customSeconds, setCustomSeconds] = useState(0);
   const audioContextRef = useRef(null);
 
   function playCompletionSound() {
@@ -94,27 +95,50 @@ function TimerPage() {
     setRemainingSeconds(nextMode === "stopwatch" ? 0 : 25 * 60);
     setSelectedPreset(25);
     setCustomMinutes(25);
+    setCustomSeconds(0);
   }
 
   function choosePreset(minutes) {
     setSelectedPreset(minutes);
     setCustomMinutes(minutes);
+    setCustomSeconds(0);
     setRemainingSeconds(minutes * 60);
     setIsRunning(false);
   }
 
-  function applyCustomDuration(event) {
-    event.preventDefault();
+  function updateCustomDuration(nextMinutes, nextSeconds) {
+    const minutes = Number(nextMinutes);
+    const seconds = Number(nextSeconds);
+    const totalSeconds = minutes * 60 + seconds;
 
-    const minutes = Number(customMinutes);
-
-    if (!Number.isFinite(minutes) || minutes < 1 || minutes > 180) {
+    if (
+      !Number.isInteger(minutes) ||
+      !Number.isInteger(seconds) ||
+      minutes < 0 ||
+      seconds < 0 ||
+      seconds > 59 ||
+      totalSeconds > 180 * 60
+    ) {
       return;
     }
 
+    setCustomMinutes(nextMinutes);
+    setCustomSeconds(nextSeconds);
     setSelectedPreset(null);
-    setRemainingSeconds(Math.round(minutes * 60));
+    setRemainingSeconds(totalSeconds);
     setIsRunning(false);
+  }
+
+  function adjustCustomDuration(part, amount) {
+    const currentValue = Number(
+      part === "minutes" ? customMinutes : customSeconds
+    );
+    const nextValue = Math.max(0, currentValue + amount);
+
+    updateCustomDuration(
+      part === "minutes" ? nextValue : customMinutes,
+      part === "seconds" ? nextValue : customSeconds
+    );
   }
 
   function resetTimer() {
@@ -124,8 +148,11 @@ function TimerPage() {
       return;
     }
 
-    const minutes = selectedPreset ?? Number(customMinutes);
-    setRemainingSeconds(minutes * 60);
+    const totalSeconds =
+      selectedPreset === null
+        ? Number(customMinutes) * 60 + Number(customSeconds)
+        : selectedPreset * 60;
+    setRemainingSeconds(totalSeconds);
     setIsRunning(false);
   }
 
@@ -191,20 +218,78 @@ function TimerPage() {
         </div>
 
         {mode === "countdown" && (
-          <form className="timer-custom-form" onSubmit={applyCustomDuration}>
-            <label htmlFor="custom-timer-minutes">Countdown minutes</label>
+          <div className="timer-custom-form">
+            <label>Countdown duration</label>
             <div>
-              <input
-                id="custom-timer-minutes"
-                type="number"
-                min="1"
-                max="180"
-                value={customMinutes}
-                onChange={(event) => setCustomMinutes(event.target.value)}
-              />
-              <button type="submit">Set timer</button>
+              <label htmlFor="custom-timer-minutes" className="visually-hidden">
+                Countdown minutes
+              </label>
+              <span className="timer-number-field">
+                <input
+                  id="custom-timer-minutes"
+                  type="number"
+                  min="0"
+                  max="180"
+                  step="1"
+                  value={customMinutes}
+                  onChange={(event) =>
+                    updateCustomDuration(event.target.value, customSeconds)
+                  }
+                  aria-label="Countdown minutes"
+                />
+                <span className="timer-stepper">
+                  <button
+                    type="button"
+                    onClick={() => adjustCustomDuration("minutes", 1)}
+                    aria-label="Increase minutes"
+                  >
+                    ▲
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => adjustCustomDuration("minutes", -1)}
+                    aria-label="Decrease minutes"
+                  >
+                    ▼
+                  </button>
+                </span>
+              </span>
+              <span aria-hidden="true">:</span>
+              <label htmlFor="custom-timer-seconds" className="visually-hidden">
+                Countdown seconds
+              </label>
+              <span className="timer-number-field">
+                <input
+                  id="custom-timer-seconds"
+                  type="number"
+                  min="0"
+                  max="59"
+                  step="1"
+                  value={customSeconds}
+                  onChange={(event) =>
+                    updateCustomDuration(customMinutes, event.target.value)
+                  }
+                  aria-label="Countdown seconds"
+                />
+                <span className="timer-stepper">
+                  <button
+                    type="button"
+                    onClick={() => adjustCustomDuration("seconds", 1)}
+                    aria-label="Increase seconds"
+                  >
+                    ▲
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => adjustCustomDuration("seconds", -1)}
+                    aria-label="Decrease seconds"
+                  >
+                    ▼
+                  </button>
+                </span>
+              </span>
             </div>
-          </form>
+          </div>
         )}
       </div>
     </section>

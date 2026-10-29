@@ -1,3 +1,5 @@
+import { USERNAME_KEY } from "./homePageUtils";
+import { DEFAULT_TAG, normalizeTag } from "./calendarUtils";
 
 const API_BASE_URL = `${(import.meta.env.VITE_API_BASE_URL || "").replace(
   /\/+$/,
@@ -34,12 +36,48 @@ function buildUrl(path = "") {
 }
 
 // ------------------------------------------------------------
+// TEMPORARY TAG STORAGE
+// TODO (Spring Boot): the backend CalendarEvent has no "tag" field yet.
+// Until it does, tags are remembered here, keyed by event ID.
+// When the backend returns and saves `tag`, delete this whole section,
+// plus the saveTag/removeTag calls below.
+// ------------------------------------------------------------
+
+function getTagStorageKey() {
+  const username = (localStorage.getItem(USERNAME_KEY) || "").trim();
+
+  return `syncup_calendar_event_tags_${username || "guest"}`;
+}
+
+function readTagMap() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(getTagStorageKey()));
+
+    return stored && typeof stored === "object" ? stored : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveTag(id, tag) {
+  localStorage.setItem(
+    getTagStorageKey(),
+    JSON.stringify({ ...readTagMap(), [id]: normalizeTag(tag) })
+  );
+}
+
+function removeTag(id) {
+  const tagMap = readTagMap();
+
+  delete tagMap[id];
+  localStorage.setItem(getTagStorageKey(), JSON.stringify(tagMap));
+}
+
+// ------------------------------------------------------------
 // DATA CONVERSION
 // ------------------------------------------------------------
 
-// Convert a Spring Boot CalendarEvent into the format
-// expected by the existing React Calendar components.
-function convertEvent(event) {
+function convertEvent(event, tagMap = readTagMap()) {
   const start = event.startDatetime;
   const end = event.endDatetime;
 
@@ -49,16 +87,18 @@ function convertEvent(event) {
     date: start.substring(0, 10),
     time: start.substring(11, 16),
     endTime: end.substring(11, 16),
+    // TODO (Spring Boot): once the backend returns `tag`, use only event.tag.
+    tag: normalizeTag(event.tag || tagMap[event.eventId] || DEFAULT_TAG),
   };
 }
 
-// Convert frontend date and time values into the
-// LocalDateTime format expected by Spring Boot.
-function buildEventBody({ title, date, time, endTime }) {
+function buildEventBody({ title, date, time, endTime, tag }) {
   return new URLSearchParams({
     title: title.trim(),
     startDatetime: `${date}T${time}:00`,
     endDatetime: `${date}T${endTime}:00`,
+    // TODO (Spring Boot): add a `tag` parameter to the create/update endpoints.
+    tag: normalizeTag(tag),
   });
 }
 
@@ -108,8 +148,9 @@ export async function getEvents() {
   }
 
   const events = await response.json();
+  const tagMap = readTagMap();
 
-  return events.map(convertEvent);
+  return events.map((event) => convertEvent(event, tagMap));
 }
 
 // ------------------------------------------------------------
@@ -128,9 +169,9 @@ export async function createEvent(values) {
     await handleResponse(response);
   }
 
-  // Spring Boot now returns HTTP 201 Created
-  // and the newly created event as JSON.
   const createdEvent = await response.json();
+
+  saveTag(createdEvent.eventId, values.tag); // TODO: remove with the backend
 
   return convertEvent(createdEvent);
 }
@@ -148,15 +189,15 @@ export async function updateEvent(id, values) {
   });
 
   await handleResponse(response);
+  saveTag(id, values.tag); // TODO: remove with the backend
 
-  // The backend currently returns "SUCCESS" for updates,
-  // so we return the values that were successfully saved.
   return {
     id,
     title: values.title.trim(),
     date: values.date,
     time: values.time,
     endTime: values.endTime,
+    tag: normalizeTag(values.tag),
   };
 }
 
@@ -169,4 +210,5 @@ export async function deleteEvent(id) {
   });
 
   await handleResponse(response);
+  removeTag(id); // TODO: remove with the backend
 }

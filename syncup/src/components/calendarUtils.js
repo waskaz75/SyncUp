@@ -15,6 +15,25 @@ const MONTH_NAMES = [
 
 export const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+export const DEFAULT_TAG = "general";
+
+export const EVENT_TAGS = [
+  { value: "general", label: "General" },
+  { value: "high-priority", label: "High Priority" },
+  { value: "flex-priority", label: "Flexible Priority" },
+  { value: "low-priority", label: "Low Priority" },
+];
+
+export function normalizeTag(tag) {
+  return EVENT_TAGS.some((item) => item.value === tag) ? tag : DEFAULT_TAG;
+}
+
+export function getTagInfo(tag) {
+  const value = normalizeTag(tag);
+
+  return EVENT_TAGS.find((item) => item.value === value);
+}
+
 function pad(number) {
   return String(number).padStart(2, "0");
 }

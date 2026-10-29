@@ -3,6 +3,7 @@ import {
   buildMonthGrid,
   formatLongDate,
   formatTime12,
+  getTagInfo,
 } from "./calendarUtils";
 
 const MAX_VISIBLE_EVENTS = 2;
@@ -71,17 +72,23 @@ function CalendarGrid({
 
               {!isCompact && count > 0 && (
                 <div className="calendar-day-events">
-                  {dayEvents.slice(0, MAX_VISIBLE_EVENTS).map((event) => (
-                    <button
-                      key={event.id}
-                      type="button"
-                      className="calendar-pill"
-                      title={`${formatTime12(event.time)} ${event.title}`}
-                      onClick={() => onSelectEvent(event)}
-                    >
-                      {`${formatTime12(event.time)} ${event.title}`}
-                    </button>
-                  ))}
+                  {dayEvents.slice(0, MAX_VISIBLE_EVENTS).map((event) => {
+                    const tag = getTagInfo(event.tag);
+                    const label = `${formatTime12(event.time)} ${event.title}`;
+
+                    return (
+                      <button
+                        key={event.id}
+                        type="button"
+                        className={`calendar-pill tag-${tag.value}`}
+                        title={`${label} (${tag.label})`}
+                        aria-label={`${label}, ${tag.label}`}
+                        onClick={() => onSelectEvent(event)}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
 
                   {count > MAX_VISIBLE_EVENTS && (
                     <button

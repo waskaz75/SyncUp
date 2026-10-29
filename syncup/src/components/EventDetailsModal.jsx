@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import ModalShell from "./ModalShell";
-import { formatFullDate, formatTime12, sortEvents } from "./calendarUtils";
+import { formatFullDate, formatTime12, getTagInfo, sortEvents } from "./calendarUtils";
 
 function EventDetailsModal({
   dateKey,
@@ -82,6 +82,17 @@ function EventDetailsModal({
           <div>
             <dt>Time</dt>
             <dd>{formatTime12(selected.time)}</dd>
+          </div>
+
+          <div>
+            <dt>Tag</dt>
+            <dd>
+              <span
+                className={`calendar-tag-chip tag-${getTagInfo(selected.tag).value}`}
+              >
+                {getTagInfo(selected.tag).label}
+              </span>
+            </dd>
           </div>
         </dl>
 
@@ -171,8 +182,15 @@ function EventDetailsModal({
                 className="calendar-day-list-button"
                 onClick={() => showEvent(event.id)}
               >
+                <span
+                  className={`calendar-tag-dot tag-${getTagInfo(event.tag).value}`}
+                  aria-hidden="true"
+                />
                 <strong>{formatTime12(event.time)}</strong>
                 <span>{event.title}</span>
+                <span className="calendar-day-list-tag">
+                  {getTagInfo(event.tag).label}
+                </span>
               </button>
             </li>
           ))}

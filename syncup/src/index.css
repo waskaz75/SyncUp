@@ -6,6 +6,11 @@
   background: #f8f5fb;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+  --tag-general: #665c7a; 
+  --tag-high-priority: #b3364a;
+  --tag-flex-priority: #a15c00;
+  --tag-flex-priority: rgb(177, 103, 7);
+  --tag-low-priority: rgba(46, 125, 91, 1);
 }
 
 * {
@@ -1983,7 +1988,7 @@ input:focus {
 }
 
 .calendar-pill {
-  background: var(--color-brand-main);
+  background: var(--tag-color);
 }
 
 .calendar-more {
@@ -2071,6 +2076,67 @@ input:focus {
   align-items: center;
   gap: 8px;
   font-weight: 600;
+}
+
+.tag-general {
+  --tag-color: var(--tag-general);
+}
+
+.tag-high-priority {
+  --tag-color: var(--tag-high-priority);
+}
+
+.tag-flex-priority {
+  --tag-color: var(--tag-flex-priority);
+}
+
+.tag-low-priority {
+  --tag-color: var(--tag-low-priority);
+}
+
+.calendar-tag-chip {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  color: var(--color-white);
+  background: var(--tag-color);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.calendar-tag-dot {
+  flex-shrink: 0;
+  align-self: center;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--tag-color);
+}
+
+.calendar-day-list-tag {
+  margin-left: auto;
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+/* The dropdown matches the text inputs in the popup. */
+.calendar-modal select {
+  width: 100%;
+  padding: 14px 15px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  color: var(--color-white);
+  background: rgba(0, 0, 0, 0.26);
+}
+
+.calendar-modal select:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.calendar-modal select option {
+  color: var(--color-text-primary);
+  background: var(--color-white);
 }
 
 /*  PROFILE MENU (in the nav bar) */

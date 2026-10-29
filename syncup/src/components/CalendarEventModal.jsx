@@ -1,7 +1,6 @@
-
 import { useEffect, useRef, useState } from "react";
-
 import ModalShell from "./ModalShell";
+import { DEFAULT_TAG, EVENT_TAGS } from "./calendarUtils";
 
 const REQUIRED_MESSAGE = "Please fill in all required fields and try again.";
 
@@ -25,6 +24,7 @@ function CalendarEventModal({
     date: event?.date ?? initialDate,
     time: event?.time ?? "",
     endTime: event?.endTime ?? "",
+    tag: event?.tag ?? DEFAULT_TAG,
   });
 
   const [invalid, setInvalid] = useState({});
@@ -68,6 +68,7 @@ function CalendarEventModal({
       date: values.date,
       time: values.time,
       endTime: values.endTime,
+      tag: values.tag,
     });
 
     // On success the page closes this popup,
@@ -219,6 +220,22 @@ function CalendarEventModal({
           aria-invalid={Boolean(invalid.endTime)}
           onChange={updateField}
         />
+        
+        <label htmlFor="calendar-event-tag">Tag</label>
+
+        <select
+          id="calendar-event-tag"
+          name="tag"
+          value={values.tag}
+          disabled={isSaving}
+          onChange={updateField}
+        >
+          {EVENT_TAGS.map((tag) => (
+            <option key={tag.value} value={tag.value}>
+              {tag.label}
+            </option>
+          ))}
+        </select>
 
         {formError && (
           <p className="checklist-field-error" role="alert">

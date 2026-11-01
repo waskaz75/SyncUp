@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { recordFocusSeconds } from "./activityApi";
 
 const PRESETS = [
   { label: "Focus", minutes: 25 },
@@ -88,6 +89,25 @@ function TimerPage() {
 
     return () => window.clearInterval(intervalId);
   }, [isRunning, mode]);
+
+  const countsAsWork = mode !== "pomodoro" || selectedPreset === 25;
+
+  useEffect(() => {
+    if (!isRunning || !countsAsWork) {
+      return undefined;
+    }
+
+    let seconds = 0;
+
+    const intervalId = window.setInterval(() => {
+      seconds += 1;
+    }, 1000);
+
+    return () => {
+      window.clearInterval(intervalId);
+      recordFocusSeconds(seconds);
+    };
+  }, [isRunning, countsAsWork]);
 
   function changeMode(nextMode) {
     setMode(nextMode);

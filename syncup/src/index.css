@@ -11,6 +11,11 @@
   --tag-flex-priority: #a15c00;
   --tag-flex-priority: rgb(177, 103, 7);
   --tag-low-priority: rgba(46, 125, 91, 1);
+  --mood-great: #8fd694;
+  --mood-good: #c9e88f;
+  --mood-okay: #ffe08a;
+  --mood-low: #ffb27a;
+  --mood-awful: #f28b9b;
 }
 
 * {
@@ -3593,4 +3598,508 @@ input:focus {
 
 .comms-avatar-large .profile-avatar-fallback {
   font-size: calc(var(--tile-size) * 0.42);
+}
+/* ============================================================
+   ME PAGE (folder tabs, mood board, accomplishment report)
+   ============================================================ */
+
+.me-page {
+  --me-surface: color-mix(in srgb, var(--color-surface-dark) 80%, transparent);
+  --chart-focus: var(--color-brand-accent);
+  --chart-checked: color-mix(in srgb, var(--color-brand-main) 60%, white);
+  width: 100%;
+  max-width: 1200px;
+  height: 100%;
+  min-height: 0;
+  align-self: stretch;
+}
+
+.me-folder {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+/* ---------------- Folder tabs ---------------- */
+
+.me-tabs {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  padding-left: 20px;
+}
+
+.me-tab {
+  padding: 9px 22px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-bottom: 0;
+  border-radius: 14px 14px 0 0;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.me-tab:hover {
+  color: var(--color-white);
+}
+
+.me-tab[aria-selected="true"] {
+  margin-bottom: -1px;
+  padding: 13px 26px;
+  color: var(--color-white);
+  background: var(--me-surface);
+}
+
+.me-tab:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.me-content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  padding: 18px;
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 16px;
+  color: var(--color-white);
+  background: var(--me-surface);
+  box-shadow: 0 24px 60px rgba(16, 10, 31, 0.22);
+  backdrop-filter: blur(10px);
+}
+
+.me-status {
+  margin: auto;
+  max-width: 420px;
+  text-align: center;
+  line-height: 1.5;
+  opacity: 0.9;
+}
+
+/* ---------------- Mood faces ---------------- */
+
+.mood-face {
+  display: block;
+  color: var(--color-surface-dark);
+}
+
+.mood-face-mouth {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+
+.mood-face-cheek {
+  fill: var(--color-brand-accent);
+  opacity: 0.45;
+}
+
+.mood-face-tear {
+  fill: var(--color-white);
+  opacity: 0.9;
+}
+
+/* ---------------- Mood board ---------------- */
+
+.me-mood {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.me-mood-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.me-mood-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.me-mood-nav h2 {
+  min-width: 170px;
+  margin: 0;
+  font-size: clamp(22px, 4vw, 30px);
+  text-align: center;
+}
+
+.me-mood-grid-wrap {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.me-mood-weekdays,
+.me-mood-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.me-mood-weekdays {
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.me-mood-grid {
+  flex: 1;
+  grid-auto-rows: minmax(64px, 1fr);
+}
+
+.me-mood-cell {
+  position: relative;
+  display: block;
+  min-height: 0;
+  padding: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.06);
+  text-align: left;
+}
+
+.me-mood-cell:hover:not(:disabled) {
+  background: rgba(247, 244, 255, 0.14);
+}
+
+.me-mood-cell.outside {
+  opacity: 0.5;
+}
+
+.me-mood-cell:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.me-mood-cell.today {
+  border-color: var(--color-brand-accent);
+}
+
+.me-mood-cell:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.me-mood-day {
+  display: grid;
+  place-items: center;
+  width: fit-content;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 4px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.me-mood-cell.today .me-mood-day {
+  color: var(--color-surface-dark);
+  background: var(--color-brand-accent);
+}
+
+.me-mood-face-wrap {
+  position: absolute;
+  inset: 30px 6px 6px;
+  display: grid;
+  place-items: center;
+}
+
+.me-mood-face-wrap .mood-face {
+  width: auto;
+  max-width: 100%;
+  height: 100%;
+  max-height: 56px;
+  aspect-ratio: 1;
+}
+
+/* ---------------- Mood popup ---------------- */
+
+.me-modal-date {
+  margin: -8px 0 14px;
+  opacity: 0.85;
+}
+
+.me-mood-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.me-mood-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 76px;
+  padding: 10px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 12px;
+  color: var(--color-white);
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.me-mood-option .mood-face {
+  width: 48px;
+  height: 48px;
+}
+
+.me-mood-option:hover {
+  background: rgba(247, 244, 255, 0.18);
+}
+
+.me-mood-option[aria-pressed="true"] {
+  border-color: var(--color-brand-accent);
+  background: color-mix(in srgb, var(--color-brand-accent) 28%, transparent);
+}
+
+.me-mood-option:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.me-mood-option[aria-disabled="true"] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ---------------- Accomplishment report ---------------- */
+
+.me-report {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.me-report-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.me-report-toolbar h2 {
+  margin: 0;
+  font-size: clamp(20px, 3.5vw, 28px);
+}
+
+.me-report-range {
+  margin: 2px 0 0;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.me-period-toggle {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.me-period-toggle button {
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.8);
+  background: transparent;
+  font-weight: 700;
+}
+
+.me-period-toggle button[aria-pressed="true"] {
+  color: var(--color-white);
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.me-period-toggle button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.me-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.me-summary-card {
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.me-summary-card p {
+  margin: 0;
+}
+
+.me-summary-label {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.me-summary-value {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 700;
+}
+
+.me-summary-value .mood-face {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+}
+
+.me-summary-note {
+  margin-top: 2px;
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.me-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr));
+  gap: 14px;
+}
+
+.me-chart {
+  min-width: 0;
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.me-chart-title {
+  margin-bottom: 10px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.me-chart-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.me-chart-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 36px;
+  height: 160px;
+  font-size: 12px;
+  text-align: right;
+  opacity: 0.8;
+}
+
+.me-chart-plot {
+  display: grid;
+  flex: 1;
+  grid-template-columns: repeat(var(--bar-count), minmax(0, 1fr));
+  gap: 4px;
+  min-width: 0;
+}
+
+.me-chart-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.me-chart-col.future {
+  opacity: 0.45;
+}
+
+.me-chart-bar-area {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 160px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  background-image: linear-gradient(
+    rgba(255, 255, 255, 0.1) 1px,
+    transparent 1px
+  );
+  background-size: 100% 50%;
+}
+
+.me-chart-bar {
+  width: 70%;
+  max-width: 44px;
+  min-height: 3px;
+  border-radius: 6px 6px 0 0;
+}
+
+.me-chart-label {
+  display: flex;
+  justify-content: center;
+  height: 18px;
+  margin-top: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.me-chart-col.today .me-chart-label {
+  color: var(--color-brand-accent);
+  font-weight: 700;
+}
+
+/* ---------------- Phones ---------------- */
+
+@media (max-width: 600px) {
+  .me-tabs {
+    padding-left: 8px;
+  }
+
+  .me-tab {
+    flex: 1;
+    padding: 9px 8px;
+    font-size: 14px;
+  }
+
+  .me-tab[aria-selected="true"] {
+    padding: 12px 8px;
+  }
+
+  .me-content {
+    padding: 12px;
+  }
+
+  .me-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .me-mood-nav h2 {
+    min-width: 0;
+  }
 }

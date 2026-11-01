@@ -12,6 +12,7 @@ import TimerPage from "./components/TimerPage";
 import StoragePage from "./components/StoragePage";
 import StudyBuddyPanel from "./components/StudyBuddyPanel";
 import StudyBuddyPage from "./components/StudyBuddyPage";
+import MePage from "./components/MePage";
 import {
   BACKGROUND_STORAGE_KEY,
   DEFAULT_BACKGROUND_SRC,
@@ -757,6 +758,9 @@ function HomePage({ onLogout }) {
 
     if (activePath === "/comms") {
       return <CommsPage />;
+    }
+    if (activePath === "/me") {
+      return <MePage />;
     }
 
     return (

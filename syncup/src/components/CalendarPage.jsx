@@ -184,14 +184,6 @@ function CalendarPage() {
           <div className="calendar-actions">
             <button
               type="button"
-              className="checklist-button checklist-button-secondary"
-              onClick={goToToday}
-            >
-              Today
-            </button>
-
-            <button
-              type="button"
               className="checklist-button"
               onClick={() => setEventModal({ date: "", event: null })}
             >

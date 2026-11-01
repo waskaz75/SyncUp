@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-
 import ChecklistItem from "./ChecklistItem";
 import ChecklistModal from "./ChecklistModal";
+import { recordChecklistCompletion } from "./activityApi";
+
 import {
   DUPLICATE_TASK_CODE,
   NOT_FOUND_CODE,
@@ -103,7 +104,6 @@ function ChecklistPage() {
 
     setError("");
 
-    // Optimistic: update the screen first.
     setItems((current) =>
       current.map((entry) =>
         entry.id === item.id ? { ...entry, completed } : entry
@@ -112,8 +112,8 @@ function ChecklistPage() {
 
     try {
       await updateItem(item.id, { completed });
+      recordChecklistCompletion(item.id, completed);
     } catch (toggleError) {
-      // Undo the optimistic change.
       setItems((current) =>
         current.map((entry) =>
           entry.id === item.id

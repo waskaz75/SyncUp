@@ -41,6 +41,10 @@ export const HOME_ROUTES = [
     path: "/comms",
   },
   {
+    label: "Me",
+    path: "/me",
+  },
+  {
     label: "Storage",
     path: "/storage",
   },

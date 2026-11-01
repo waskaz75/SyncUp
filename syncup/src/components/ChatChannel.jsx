@@ -15,28 +15,42 @@ const EMPTY_MESSAGE = "Please type a message to send.";
 const SEND_FAILED_MESSAGE =
   "Your message could not be sent. It is still in the box, so you can try again.";
 
-function ChatChannel({ isActive }) {
+function ChatChannel({ isActive, conversation }) {
   const username = useUser();
-    const myPicture = useProfilePicture();
+  const myPicture = useProfilePicture();
+
+  const conversationName =
+    conversation?.type === "DIRECT"
+      ? conversation.members.find((member) => member.username !== username)
+          ?.username || "Direct message"
+      : conversation?.name;
+  const memberNames =
+    conversation?.members
+      ?.map((member) => member.username)
+      .filter(Boolean)
+      .join(", ") || "No members";
 
   const inputRef = useRef(null);
   const messageEndRef = useRef(null);
 
   const [messages, setMessages] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(Boolean(conversation));
   const [error, setError] = useState("");
   const [text, setText] = useState("");
   const [isSending, setIsSending] = useState(false);
 
   const groups = useMemo(() => groupMessagesByDate(messages), [messages]);
 
-  // Load the history, then listen for new messages from other people.
   useEffect(() => {
+    if (!conversation) {
+      return undefined;
+    }
+
     let isCancelled = false;
 
     async function loadMessages() {
       try {
-        const loaded = await getMessages();
+        const loaded = await getMessages(conversation.id);
 
         if (!isCancelled) {
           setMessages(loaded);
@@ -55,13 +69,13 @@ function ChatChannel({ isActive }) {
 
     loadMessages();
 
-    const unsubscribe = subscribeToMessages(setMessages);
+    const unsubscribe = subscribeToMessages(conversation.id, setMessages);
 
     return () => {
       isCancelled = true;
       unsubscribe();
     };
-  }, []);
+  }, [conversation]);
 
   // Keep the newest message in view (also when switching back to this channel).
   useEffect(() => {
@@ -89,7 +103,7 @@ function ChatChannel({ isActive }) {
     setIsSending(true);
 
     try {
-      const sent = await sendMessage(trimmed);
+      const sent = await sendMessage(conversation.id, trimmed);
 
       setMessages((current) =>
         current.some((message) => message.id === sent.id)
@@ -99,7 +113,7 @@ function ChatChannel({ isActive }) {
       setText("");
     } catch (sendError) {
       console.error("Sending message failed:", sendError);
-      setError(SEND_FAILED_MESSAGE); // the typed text stays in the box
+      setError(sendError.message || SEND_FAILED_MESSAGE); // the typed text stays in the box
     } finally {
       setIsSending(false);
       inputRef.current?.focus();
@@ -109,7 +123,18 @@ function ChatChannel({ isActive }) {
   return (
     <section className="comms-view" aria-labelledby="comms-chat-title">
       <header className="comms-view-header">
-        <h2 id="comms-chat-title"># Text chat</h2>
+        <h2 id="comms-chat-title">
+          {conversation?.type === "DIRECT" ? "@" : "#"}{" "}
+          {conversationName || "Text conversations"}
+        </h2>
+        <p className="comms-recipient">
+          {conversation?.type === "DIRECT" ? "To:" : "Members:"}{" "}
+          <strong>
+            {conversation?.type === "DIRECT"
+              ? conversationName
+              : memberNames}
+          </strong>
+        </p>
       </header>
 
       <div
@@ -186,6 +211,7 @@ function ChatChannel({ isActive }) {
         </div>
       )}
 
+      {conversation && (
       <form className="chatbot-form" onSubmit={handleSend} noValidate>
         <label htmlFor="comms-message-input" className="visually-hidden">
           Message
@@ -199,7 +225,8 @@ function ChatChannel({ isActive }) {
           maxLength={MAX_MESSAGE_LENGTH}
           autoComplete="off"
           readOnly={isSending}
-          placeholder="Message #text-chat"
+          placeholder={`Message ${conversationName}`}
+          aria-label={`Message ${conversationName}`}
           aria-required="true"
           aria-invalid={error === EMPTY_MESSAGE}
           onChange={(event) => {
@@ -215,6 +242,7 @@ function ChatChannel({ isActive }) {
           {isSending ? "Sending…" : "Send"}
         </button>
       </form>
+      )}
     </section>
   );
 }

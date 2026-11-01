@@ -73,6 +73,12 @@ VITE_API_BASE_URL=<elastic-beanstalk-backend-url>
 
 Vite exposes variables prefixed with `VITE_` to the frontend. `VITE_API_BASE_URL` is not a secret, but database and SMTP credentials must never be added to Vercel or committed to the repository.
 
+The communications channel uses WebSockets and browser WebRTC. Set
+`VITE_WS_BASE_URL` only when the WebSocket host differs from the API host;
+otherwise it is derived from `VITE_API_BASE_URL`. For production NAT
+traversal, set `VITE_ICE_SERVERS` to a JSON array containing the deployment's
+STUN/TURN servers, including credentials for TURN when required.
+
 ## Database setup
 
 The backend connects to the configured Amazon RDS MySQL instance and uses the `syncupdb` schema. Initialize or update the RDS database using [`syncup_backend/src/main/resources/database.sql`](syncup_backend/src/main/resources/database.sql):
@@ -80,6 +86,10 @@ The backend connects to the configured Amazon RDS MySQL instance and uses the `s
 ```sql
 SOURCE syncup_backend/src/main/resources/database.sql;
 ```
+
+For an existing database, run
+[`syncup_backend/src/main/resources/database-migrations.sql`](syncup_backend/src/main/resources/database-migrations.sql)
+once before using group and direct conversations.
 
 The RDS security group must allow connections from the AWS Elastic Beanstalk environment. Keep database credentials in Elastic Beanstalk environment configuration rather than in source control.
 
@@ -120,6 +130,15 @@ The deployed frontend communicates with the Elastic Beanstalk backend through `V
 - `/api/calendar` — calendar event operations
 - `/api/checklist` — checklist and checklist item operations
 - `/api/files` — authenticated folder creation, file upload, listing, download, and deletion
+- `/api/comms/conversations` — authenticated group and direct-message lists and creation
+- `/api/comms/conversations/{id}/messages` — conversation history and message creation
+- `/api/comms/direct` — create or reuse a direct conversation
+- `/ws/comms` — authenticated real-time text-message events
+- `/ws/voice` — authenticated voice presence and WebRTC signaling
+
+Voice audio and screen-share video use peer-to-peer WebRTC connections; the
+backend only persists text messages and relays signaling. Configure a TURN
+server for reliable connections across restrictive networks.
 
 File uploads use `multipart/form-data` with a `file` part. Include the active
 `sessionId` on every request; pass `folderId` to place a file in a folder.

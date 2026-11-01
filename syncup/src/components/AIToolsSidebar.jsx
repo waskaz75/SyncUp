@@ -26,17 +26,6 @@ function AIToolsSidebar({ onSetBackground }) {
         className={`ai-tools-sidebar ${isOpen ? "open" : ""}`}
         aria-label="AI tools"
       >
-        <div className="ai-tools-tabs" role="tablist" aria-label="AI tools">
-          <button
-            type="button"
-            className="ai-tools-tab active"
-            onClick={() => setIsOpen(true)}
-          >
-            <span aria-hidden="true">✦</span>
-            <span>Background AI</span>
-          </button>
-        </div>
-
         <div className="ai-tools-panel">
           <ChatbotPanel
             onClose={closeSidebar}

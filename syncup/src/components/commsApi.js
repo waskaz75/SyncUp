@@ -1,216 +1,355 @@
-import { USERNAME_KEY } from "./homePageUtils";
+import { SESSION_KEY, USERNAME_KEY } from "./homePageUtils";
 
-const MESSAGES_KEY = "syncup_comms_messages";
-const PROFILE_PICTURE_KEY = "syncup_profile_picture";
-const MOCK_DELAY_MS = 300;
-const GUEST_NAME = "Guest";
+const API_BASE_URL = `${(import.meta.env.VITE_API_BASE_URL || "").replace(
+  /\/+$/,
+  ""
+)}/api/comms`;
+const WS_BASE_URL = (import.meta.env.VITE_WS_BASE_URL || "").replace(
+  /\/+$/,
+  ""
+);
 
 export const MAX_MESSAGE_LENGTH = 2000;
 
-// ------------------------------------------------------------
-// Mock helpers (these all disappear when the backend is wired in)
-// ------------------------------------------------------------
+function getSessionId() {
+  const sessionId = localStorage.getItem(SESSION_KEY);
 
-function wait() {
-  return new Promise((resolve) => {
-    window.setTimeout(resolve, MOCK_DELAY_MS);
-  });
-}
-
-function getCurrentUsername() {
-  return (localStorage.getItem(USERNAME_KEY) || "").trim() || GUEST_NAME;
-}
-
-function createId() {
-  if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return crypto.randomUUID();
+  if (!sessionId) {
+    throw new Error("You must be logged in to use communications.");
   }
 
-  return `msg-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  return sessionId;
 }
 
-function isSafePicture(value) {
-  return (
-    typeof value === "string" &&
-    /^data:image\/(png|jpeg|webp);base64,/.test(value)
+function buildUrl(path = "") {
+  const url = new URL(`${API_BASE_URL}${path}`, window.location.origin);
+  url.searchParams.set("sessionId", getSessionId());
+  return url.toString();
+}
+
+function webSocketUrl(path) {
+  const configuredApi = (import.meta.env.VITE_API_BASE_URL || "").replace(
+    /\/+$/,
+    ""
+  );
+  const base =
+    WS_BASE_URL ||
+    (configuredApi
+      ? configuredApi.replace(/^http/, "ws")
+      : `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}`);
+  const url = new URL(`${base}${path}`, window.location.origin);
+  url.searchParams.set("sessionId", getSessionId());
+  return url.toString();
+}
+
+async function readResponse(response) {
+  if (!response.ok) {
+    throw new Error((await response.text()) || "The communications request failed.");
+  }
+  return response.json();
+}
+
+export async function getConversations() {
+  return readResponse(await fetch(buildUrl("/conversations")));
+}
+
+export async function createGroup(name, emails) {
+  return readResponse(
+    await fetch(buildUrl("/conversations"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, emails }),
+    })
   );
 }
 
-function readPicture(author) {
-  const suffix = author === GUEST_NAME ? "guest" : author;
-  const stored = localStorage.getItem(`${PROFILE_PICTURE_KEY}_${suffix}`);
-
-  return isSafePicture(stored) ? stored : "";
+export async function createDirectMessage(email) {
+  return readResponse(
+    await fetch(buildUrl("/direct"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    })
+  );
 }
 
-function withPicture(message) {
-  return { ...message, authorPicture: readPicture(message.author) };
+export async function addConversationMember(conversationId, email) {
+  return readResponse(
+    await fetch(buildUrl(`/conversations/${conversationId}/members`), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    })
+  );
 }
 
-function buildSeedMessages() {
-  const now = Date.now();
-  const yesterday = now - 24 * 60 * 60 * 1000;
-
-  return [
-    {
-      id: createId(),
-      author: "Maya",
-      text: "Hey everyone! Anyone studying for the exam this week?",
-      sentAt: new Date(yesterday).toISOString(),
-    },
-    {
-      id: createId(),
-      author: "Jordan",
-      text: "I am! Want to jump on a call later?",
-      sentAt: new Date(yesterday + 5 * 60 * 1000).toISOString(),
-    },
-    {
-      id: createId(),
-      author: "Maya",
-      text: "Yes, let's do it. I'll start a screen share for my notes.",
-      sentAt: new Date(now - 60 * 1000).toISOString(),
-    },
-  ];
+export async function getMessages(conversationId) {
+  return readResponse(
+    await fetch(buildUrl(`/conversations/${conversationId}/messages`))
+  );
 }
 
-function writeMessages(messages) {
-  localStorage.setItem(MESSAGES_KEY, JSON.stringify(messages));
+export async function sendMessage(conversationId, text) {
+  const body = new URLSearchParams({ text });
+  return readResponse(
+    await fetch(buildUrl(`/conversations/${conversationId}/messages`), {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body,
+    })
+  );
 }
 
-function readMessages() {
-  const raw = localStorage.getItem(MESSAGES_KEY);
-
-  if (raw === null) {
-    const seeded = buildSeedMessages();
-
-    writeMessages(seeded);
-
-    return seeded;
-  }
+export function subscribeToMessages(conversationId, onChange) {
+  let socket;
 
   try {
-    const stored = JSON.parse(raw);
+    socket = new WebSocket(webSocketUrl("/ws/comms"));
+  } catch (error) {
+    console.error("Opening communications socket failed:", error);
+    return () => {};
+  }
 
-    return Array.isArray(stored) ? stored : [];
-  } catch {
+  socket.onmessage = (event) => {
+    try {
+      onChange((current) => {
+        const message = JSON.parse(event.data);
+        if (message.conversationId !== conversationId) {
+          return current;
+        }
+        return current.some((item) => item.id === message.id)
+          ? current
+          : [...current, message];
+      });
+    } catch (error) {
+      console.error("Reading communications event failed:", error);
+    }
+  };
+  socket.onerror = (error) => console.error("Communications socket failed:", error);
+
+  return () => socket.close();
+}
+
+let voiceSocket = null;
+let localStream = null;
+let screenStream = null;
+let voiceCallbacks = {};
+let participants = [];
+const peers = new Map();
+
+function iceServers() {
+  try {
+    return JSON.parse(import.meta.env.VITE_ICE_SERVERS || "[]");
+  } catch (error) {
+    console.error("Invalid VITE_ICE_SERVERS configuration:", error);
     return [];
   }
 }
 
-// ------------------------------------------------------------
-// TEXT CHANNEL
-// Each message: { id, author, authorPicture, text, sentAt }
-// ------------------------------------------------------------
-
-// TODO (Spring Boot): replace the mock below with
-//   const response = await fetch("http://localhost:8080/api/comms/messages", {
-//     method: "GET",
-//   });
-// Send the session ID the same way calendarApi.js does (query parameter).
-// Then throw if !response.ok, and return the messages from the response.
-// The backend should return each author's picture URL as `authorPicture`
-// (or "" if they have none).
-export async function getMessages() {
-  await wait();
-
-  return readMessages().map(withPicture);
+function sendVoice(message) {
+  if (voiceSocket?.readyState === WebSocket.OPEN) {
+    voiceSocket.send(JSON.stringify(message));
+  }
 }
 
-// TODO (Spring Boot): replace the mock below with
-//   const response = await fetch("http://localhost:8080/api/comms/messages", {
-//     method: "POST",
-//     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-//     body: new URLSearchParams({ text }),
-//   });
-// The server decides the author and the time. Throw if !response.ok,
-// and return the created message from the response.
-export async function sendMessage(text) {
-  await wait();
-
-  const message = {
-    id: createId(),
-    author: getCurrentUsername(),
-    text: text.trim(),
-    sentAt: new Date().toISOString(),
-  };
-
-  writeMessages([...readMessages(), message]);
-
-  return withPicture(message);
+function updateParticipants(next) {
+  participants = next;
+  voiceCallbacks.onParticipants?.(participants);
 }
 
-// Calls onChange(allMessages) whenever someone else posts. Returns a function
-// that stops listening.
-// TODO (Spring Boot): replace the mock below with a WebSocket, for example
-//   const socket = new WebSocket("ws://localhost:8080/ws/comms");
-//   socket.onmessage = (event) => onChange(JSON.parse(event.data));
-//   return () => socket.close();
-// (The mock only reacts to messages sent from ANOTHER browser tab.)
-export function subscribeToMessages(onChange) {
-  function handleStorage(event) {
-    if (event.key === MESSAGES_KEY) {
-      onChange(readMessages().map(withPicture));
-    }
+function removePeer(id) {
+  const peer = peers.get(id);
+  peer?.connection.close();
+  peers.delete(id);
+  updateParticipants(participants.filter((participant) => participant.id !== id));
+}
+
+function createPeer(id) {
+  if (peers.has(id)) {
+    return peers.get(id).connection;
   }
 
-  window.addEventListener("storage", handleStorage);
+  const connection = new RTCPeerConnection({ iceServers: iceServers() });
+  const peer = { connection, sender: null, ready: false, negotiating: false };
+  peers.set(id, peer);
 
-  return () => window.removeEventListener("storage", handleStorage);
+  localStream?.getTracks().forEach((track) => {
+    peer.sender = connection.addTrack(track, localStream);
+  });
+  screenStream?.getTracks().forEach((track) => {
+    connection.addTrack(track, screenStream);
+  });
+
+  connection.onicecandidate = ({ candidate }) => {
+    if (candidate) {
+      sendVoice({ type: "signal", target: id, candidate });
+    }
+  };
+  connection.ontrack = ({ track, streams }) => {
+    if (track.kind === "audio") {
+      const audio = new Audio();
+      audio.srcObject = streams[0];
+      audio.play().catch(() => {});
+    } else if (track.kind === "video") {
+      voiceCallbacks.onRemoteScreen?.({
+        username:
+          participants.find((participant) => participant.id === id)?.username ||
+          "Participant",
+        stream: streams[0],
+      });
+    }
+  };
+  connection.onconnectionstatechange = () => {
+    if (["failed", "closed", "disconnected"].includes(connection.connectionState)) {
+      removePeer(id);
+    }
+  };
+  connection.onnegotiationneeded = async () => {
+    if (!peer.ready || peer.negotiating || connection.signalingState !== "stable") {
+      return;
+    }
+    try {
+      peer.negotiating = true;
+      const offer = await connection.createOffer();
+      await connection.setLocalDescription(offer);
+      sendVoice({
+        type: "signal",
+        target: id,
+        description: connection.localDescription,
+      });
+    } finally {
+      peer.negotiating = false;
+    }
+  };
+
+  return connection;
 }
 
-// ------------------------------------------------------------
-// VOICE CHANNEL + SCREEN SHARE
-// The browser already captures the microphone and screen (see
-// VoiceChannel.jsx). What is missing is a server that connects people.
-//
-// TODO (Spring Boot / signaling): voice and video travel directly between
-// browsers using WebRTC (RTCPeerConnection), but the browsers need a
-// signaling server (for example a WebSocket at ws://localhost:8080/ws/voice)
-// to exchange connection details. Agree with your backend teammate on how
-// that works. The functions below mark where each step belongs.
-// ------------------------------------------------------------
+async function handleSignal(event) {
+  const id = event.from;
+  const connection = createPeer(id);
 
-// Called after the microphone is captured.
-// TODO: connect to the signaling server, announce "joined", create one
-// RTCPeerConnection per other person, and add stream's audio track to it.
+  if (event.description) {
+    await connection.setRemoteDescription(event.description);
+    if (event.description.type === "offer") {
+      const answer = await connection.createAnswer();
+      await connection.setLocalDescription(answer);
+      sendVoice({ type: "signal", target: id, description: connection.localDescription });
+    }
+    peers.get(id).ready = true;
+  }
+  if (event.candidate) {
+    await connection.addIceCandidate(event.candidate);
+  }
+}
+
 export async function joinVoiceChannel(stream) {
-  void stream;
-  await wait();
+  localStream = stream;
+  const socket = new WebSocket(webSocketUrl("/ws/voice"));
+  voiceSocket = socket;
+
+  await new Promise((resolve, reject) => {
+    socket.onopen = () => {
+      sendVoice({
+        type: "join",
+        username: localStorage.getItem(USERNAME_KEY) || "Guest",
+      });
+      resolve();
+    };
+    socket.onerror = () => reject(new Error("Could not connect to the voice channel."));
+  });
+
+  socket.onmessage = async (event) => {
+    try {
+      const message = JSON.parse(event.data);
+      if (message.type === "participants") {
+        updateParticipants(message.participants);
+        for (const participant of message.participants) {
+          const connection = createPeer(participant.id);
+          if (connection.signalingState === "stable") {
+            const peer = peers.get(participant.id);
+            peer.negotiating = true;
+            try {
+              const offer = await connection.createOffer();
+              await connection.setLocalDescription(offer);
+              sendVoice({
+                type: "signal",
+                target: participant.id,
+                description: connection.localDescription,
+              });
+            } finally {
+              peer.ready = true;
+              peer.negotiating = false;
+            }
+          } else {
+            peers.get(participant.id).ready = true;
+          }
+        }
+      } else if (message.type === "peer-joined") {
+        updateParticipants([
+          ...participants,
+          { id: message.id, username: message.username, picture: "", isMuted: false },
+        ]);
+      } else if (message.type === "peer-left") {
+        removePeer(message.id);
+      } else if (message.type === "signal") {
+        await handleSignal(message);
+      } else if (message.type === "mute") {
+        updateParticipants(
+          participants.map((participant) =>
+            participant.id === message.from
+              ? { ...participant, isMuted: message.isMuted }
+              : participant
+          )
+        );
+      } else if (message.type === "screen-stop") {
+        voiceCallbacks.onRemoteScreen?.(null);
+      }
+    } catch (error) {
+      console.error("Handling voice event failed:", error);
+    }
+  };
 }
 
-// TODO: tell the signaling server we left and close every RTCPeerConnection.
 export async function leaveVoiceChannel() {
-  await wait();
+  sendVoice({ type: "leave" });
+  peers.forEach((peer) => peer.connection.close());
+  peers.clear();
+  voiceSocket?.close();
+  voiceSocket = null;
+  localStream = null;
+  screenStream = null;
+  participants = [];
 }
 
-// TODO: tell other users this person is muted or unmuted.
 export async function setVoiceMuted(isMuted) {
-  void isMuted;
+  sendVoice({ type: "mute", isMuted });
 }
 
-// Called when the user starts sharing.
-// TODO: add the stream's video track to every RTCPeerConnection and tell
-// the signaling server who is sharing.
 export async function startScreenShare(stream) {
-  void stream;
-  await wait();
+  screenStream = stream;
+  for (const [id, peer] of peers) {
+    stream.getTracks().forEach((track) => peer.connection.addTrack(track, stream));
+    sendVoice({ type: "screen-start", target: id });
+  }
 }
 
-// TODO: remove the video track from every connection and tell the server.
 export async function stopScreenShare() {
-  await wait();
+  screenStream = null;
+  peers.forEach(({ connection }) => {
+    connection.getSenders()
+      .filter((sender) => sender.track?.kind === "video")
+      .forEach((sender) => connection.removeTrack(sender));
+  });
+  sendVoice({ type: "screen-stop" });
 }
 
-// Listen for changes from other people in the voice channel.
-//   onParticipants([{ id, username, picture, isMuted }]) - others in the call
-//   onRemoteScreen({ username, stream } | null) - someone else's shared
-//     screen as a MediaStream (RTCPeerConnection "track" event), or null
-//     when they stop.
-// Returns a function that stops listening.
-// TODO: wire these callbacks to the signaling server and RTCPeerConnections.
 export function subscribeToVoiceChannel({ onParticipants, onRemoteScreen }) {
-  onParticipants([]);
+  voiceCallbacks = { onParticipants, onRemoteScreen };
+  onParticipants(participants);
   onRemoteScreen(null);
 
-  return () => {};
+  return () => {
+    voiceCallbacks = {};
+  };
 }

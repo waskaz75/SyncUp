@@ -1166,7 +1166,7 @@ input:focus {
   width: min(36vw, 460px);
   max-width: 100vw;
   height: 100vh;
-  padding-top: 58px;
+  padding-top: 0;
   border-left: 1px solid color-mix(in srgb, var(--color-brand-accent) 42%, transparent);
   background:
     linear-gradient(
@@ -3023,6 +3023,123 @@ input:focus {
   box-shadow: var(--focus-ring);
 }
 
+.comms-conversation-actions {
+  display: flex;
+  gap: 6px;
+  margin: 8px 0 4px;
+}
+
+.comms-conversation-actions button,
+.comms-conversation-form button {
+  padding: 6px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: var(--color-white);
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 12px;
+}
+
+.comms-conversation-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 0;
+}
+
+.comms-conversation-form h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.comms-conversation-form input,
+.comms-conversation-form select {
+  width: 100%;
+  min-height: 34px;
+  box-sizing: border-box;
+  padding: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 6px;
+  color: var(--color-white);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.comms-conversation-form select[multiple] {
+  min-height: 90px;
+}
+
+.comms-conversation-form p {
+  margin: 0;
+  color: #ffb4b4;
+  font-size: 12px;
+}
+
+.comms-add-member-button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: calc(100% - 42px);
+  margin: 4px 12px 0 42px;
+  padding: 3px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  color: var(--color-white);
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 11px;
+}
+
+.comms-add-member-button:hover,
+.comms-member-form button:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.comms-member-form {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 5px 12px 3px 42px;
+  padding: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.comms-member-form label {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 11px;
+}
+
+.comms-member-form-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.comms-member-form input {
+  width: 100%;
+  min-height: 28px;
+  box-sizing: border-box;
+  padding: 4px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: var(--color-white);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.comms-member-form button {
+  flex: 1;
+  padding: 3px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  color: var(--color-white);
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 11px;
+}
+
+.comms-member-form p {
+  margin: 0;
+  color: #ffb4b4;
+  font-size: 11px;
+}
+
 /* ---------------- Right side ---------------- */
 
 .comms-main {
@@ -3060,6 +3177,17 @@ input:focus {
 .comms-view-header h2 {
   margin: 0;
   font-size: 18px;
+}
+
+.comms-recipient {
+  margin: 4px 0 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 13px;
+}
+
+.comms-recipient strong {
+  color: var(--color-white);
+  font-weight: 600;
 }
 
 .comms-banner {

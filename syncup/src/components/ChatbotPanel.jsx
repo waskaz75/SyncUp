@@ -79,7 +79,9 @@ function ChatbotPanel({ onClose, onSetBackground }) {
   return (
     <section className="chatbot-panel" aria-label="Background AI image generator">
         <header className="chatbot-header">
-          <h2>Background AI Image</h2>
+          <h2>
+            <span aria-hidden="true">✦</span> Background AI Image
+          </h2>
 
           <button
             type="button"

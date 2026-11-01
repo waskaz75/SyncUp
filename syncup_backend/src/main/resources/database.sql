@@ -20,7 +20,7 @@ CREATE TABLE users (
    username VARCHAR(50) NOT NULL UNIQUE,
    password_hash VARCHAR(255) NOT NULL,
    email VARCHAR(255) NOT NULL UNIQUE,
-   profile_id CHAR(36) NULL,
+   profile_id CHAR(36) NULL
 --    role ENUM('user', 'admin') NOT NULL DEFAULT 'user',
 --    CONSTRAINT fk_users_profile
 --        FOREIGN KEY (profile_id)
@@ -51,6 +51,8 @@ CREATE TABLE sessions (
 CREATE TABLE chat_rooms (
    room_id CHAR(36) PRIMARY KEY,
    room_name VARCHAR(100) NOT NULL,
+   room_type VARCHAR(20) NOT NULL DEFAULT 'GROUP',
+   direct_message_key VARCHAR(73) NULL UNIQUE,
    created_by CHAR(36) NOT NULL,
    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
    CONSTRAINT fk_chat_rooms_creator

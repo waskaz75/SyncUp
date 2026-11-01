@@ -161,9 +161,13 @@ function ChecklistPage() {
       );
     }
 
+    const sortedItems = [...items].sort(
+      (a, b) => Number(a.completed) - Number(b.completed)
+    );
+
     return (
       <ul className="checklist-list">
-        {items.map((item) => (
+        {sortedItems.map((item) => (
           <ChecklistItem
             key={item.id}
             item={item}

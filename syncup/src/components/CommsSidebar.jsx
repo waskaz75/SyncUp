@@ -1,10 +1,6 @@
 import { useState } from "react";
 import CommsAvatar from "./commsAvatar";
-import {
-  addConversationMember,
-  createDirectMessage,
-  createGroup,
-} from "./commsApi";
+import { createDirectMessage, createGroup } from "./commsApi";
 import { useUser } from "./homePageUtils";
 
 function SpeakerIcon() {
@@ -44,8 +40,6 @@ function CommsSidebar({
   const [email, setEmail] = useState("");
   const [groupEmails, setGroupEmails] = useState([]);
   const [error, setError] = useState("");
-  const [memberEmail, setMemberEmail] = useState("");
-  const [memberConversationId, setMemberConversationId] = useState(null);
 
   function conversationName(conversation) {
     if (conversation.type !== "DIRECT") {
@@ -146,58 +140,11 @@ function CommsSidebar({
               </span>
               <span>{conversationName(conversation)}</span>
             </button>
-            {conversation.type === "GROUP" &&
-              activeChannel === "chat" &&
-              activeConversationId === conversation.id && (
-                <button
-                  type="button"
-                  className="comms-add-member-button"
-                  onClick={() => {
-                    setMemberConversationId(conversation.id);
-                    setError("");
-                  }}
-                >
-                  <span aria-hidden="true">+</span> Add member
-                </button>
-              )}
-            {memberConversationId === conversation.id && (
-              <form
-                className="comms-member-form"
-                onSubmit={handleAddMember}
-              >
-                <label htmlFor={`member-email-${conversation.id}`}>
-                  Add someone to this group
-                </label>
-                <input
-                  id={`member-email-${conversation.id}`}
-                  type="email"
-                  value={memberEmail}
-                  onChange={(event) => setMemberEmail(event.target.value)}
-                  placeholder="person@example.com"
-                  autoComplete="email"
-                  required
-                />
-                <div className="comms-member-form-actions">
-                  <button type="submit">Add member</button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMemberConversationId(null);
-                      setMemberEmail("");
-                      setError("");
-                    }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-                {error && <p role="alert">{error}</p>}
-              </form>
-            )}
           </li>
         ))}
 
         <li className="comms-conversation-actions">
-          <button type="button" onClick={() => openComposer("group")}>
+          <button type="button" class="checklist-button" onClick={() => openComposer("group")}>
             + Group
           </button>
           <button type="button" onClick={() => openComposer("direct")}>

@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import ChatChannel from "./ChatChannel";
 import CommsSidebar from "./CommsSidebar";
 import VoiceChannel from "./VoiceChannel";
-import { getConversations } from "./commsApi";
+import AddMemberModal from "./AddMemberModal";
+import { addConversationMember, getConversations } from "./commsApi";
 
 const NO_VOICE = { isJoined: false, people: [], screenActive: false };
 
@@ -12,6 +13,7 @@ function CommsPage() {
   const [voice, setVoice] = useState(NO_VOICE);
   const [conversations, setConversations] = useState([]);
   const [activeConversationId, setActiveConversationId] = useState(null);
+  const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
 
   useEffect(() => {
     getConversations()
@@ -42,12 +44,30 @@ function CommsPage() {
     setChannel("chat");
   }
 
-  function updateConversation(conversation) {
+    function updateConversation(conversation) {
     setConversations((current) =>
       current.map((item) =>
         item.id === conversation.id ? conversation : item
       )
     );
+  }
+
+  async function handleAddMember(email) {
+    try {
+      const updated = await addConversationMember(activeConversationId, email);
+
+      updateConversation(updated);
+      setIsAddMemberOpen(false);
+
+      return { ok: true };
+    } catch (addError) {
+      console.error("Adding conversation member failed:", addError);
+
+      return {
+        ok: false,
+        message: addError.message || "Could not add that member.",
+      };
+    }
   }
 
   return (
@@ -74,6 +94,7 @@ function CommsPage() {
                 key={activeConversationId || "no-conversation"}
                 isActive={channel === "chat"}
                 conversation={activeConversation}
+                onAddMember={() => setIsAddMemberOpen(true)}
               />
             </div>
 
@@ -83,6 +104,14 @@ function CommsPage() {
           </div>
         </div>
       </div>
+
+      {isAddMemberOpen && activeConversation?.type === "GROUP" && (
+        <AddMemberModal
+          groupName={activeConversation.name}
+          onSubmit={handleAddMember}
+          onClose={() => setIsAddMemberOpen(false)}
+        />
+      )}
     </section>
   );
 }

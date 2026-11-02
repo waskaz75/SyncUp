@@ -15,7 +15,7 @@ const EMPTY_MESSAGE = "Please type a message to send.";
 const SEND_FAILED_MESSAGE =
   "Your message could not be sent. It is still in the box, so you can try again.";
 
-function ChatChannel({ isActive, conversation }) {
+function ChatChannel({ isActive, conversation, onAddMember }) {
   const username = useUser();
   const myPicture = useProfilePicture();
 
@@ -122,19 +122,31 @@ function ChatChannel({ isActive, conversation }) {
 
   return (
     <section className="comms-view" aria-labelledby="comms-chat-title">
-      <header className="comms-view-header">
-        <h2 id="comms-chat-title">
-          {conversation?.type === "DIRECT" ? "@" : "#"}{" "}
-          {conversationName || "Text conversations"}
-        </h2>
-        <p className="comms-recipient">
-          {conversation?.type === "DIRECT" ? "To:" : "Members:"}{" "}
-          <strong>
-            {conversation?.type === "DIRECT"
-              ? conversationName
-              : memberNames}
-          </strong>
-        </p>
+      <header className="comms-view-header comms-chat-header">
+        <div className="comms-chat-header-text">
+          <h2 id="comms-chat-title">
+            {conversation?.type === "DIRECT" ? "@" : "#"}{" "}
+            {conversationName || "Text conversations"}
+          </h2>
+          <p className="comms-recipient">
+            {conversation?.type === "DIRECT" ? "To:" : "Members:"}{" "}
+            <strong>
+              {conversation?.type === "DIRECT"
+                ? conversationName
+                : memberNames}
+            </strong>
+          </p>
+        </div>
+
+        {conversation?.type === "GROUP" && (
+          <button
+            type="button"
+            className="checklist-button comms-add-member"
+            onClick={onAddMember}
+          >
+            + Add member
+          </button>
+        )}
       </header>
 
       <div

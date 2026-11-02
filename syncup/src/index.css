@@ -3036,12 +3036,12 @@ input:focus {
 
 .comms-conversation-actions button,
 .comms-conversation-form button {
-  padding: 6px 8px;
+  padding: 6px 20px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 6px;
   color: var(--color-white);
   background: rgba(255, 255, 255, 0.08);
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .comms-conversation-form {
@@ -4101,5 +4101,41 @@ input:focus {
 
   .me-mood-nav h2 {
     min-width: 0;
+  }
+}
+
+/* ---------------- Comms: header with Add member button ---------------- */
+
+.comms-chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.comms-chat-header-text {
+  min-width: 0;
+}
+
+.comms-chat-header .comms-recipient {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.comms-add-member {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  font-size: 14px;
+}
+
+.comms-add-member-button,
+.comms-member-form {
+  display: none;
+}
+
+@media (max-width: 420px) {
+  .comms-chat-header {
+    flex-wrap: wrap;
   }
 }

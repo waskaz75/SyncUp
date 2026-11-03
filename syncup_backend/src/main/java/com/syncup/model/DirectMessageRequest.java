@@ -1,4 +1,4 @@
 package com.syncup.model;
 
-public record DirectMessageRequest(String email) {
+public record DirectMessageRequest(String username) {
 }

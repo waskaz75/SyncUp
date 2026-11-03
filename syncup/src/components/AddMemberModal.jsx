@@ -2,14 +2,14 @@ import { useEffect, useRef, useState } from "react";
 
 import ModalShell from "./ModalShell";
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const USERNAME_PATTERN = /^[A-Za-z0-9_]{3,20}$/;
 
-// onSubmit(email) returns { ok: true } when saved (the page closes this
+// onSubmit(username) returns { ok: true } when saved (the page closes this
 // popup) or { ok: false, message } when it failed (the popup stays open).
 function AddMemberModal({ groupName, onSubmit, onClose }) {
   const inputRef = useRef(null);
 
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -30,16 +30,16 @@ function AddMemberModal({ groupName, onSubmit, onClose }) {
       return;
     }
 
-    const trimmed = email.trim().toLowerCase();
+    const trimmed = username.trim();
 
     if (!trimmed) {
-      setError("Please enter an email address.");
+      setError("Please enter a username.");
       inputRef.current?.focus();
       return;
     }
 
-    if (!EMAIL_PATTERN.test(trimmed)) {
-      setError("Enter a valid email address.");
+    if (!USERNAME_PATTERN.test(trimmed)) {
+      setError("Enter a valid username (3–20 letters, numbers, or underscores).");
       inputRef.current?.focus();
       return;
     }
@@ -64,22 +64,20 @@ function AddMemberModal({ groupName, onSubmit, onClose }) {
       {groupName && <p className="me-modal-date">{`To ${groupName}`}</p>}
 
       <form onSubmit={handleSubmit} noValidate>
-        <label htmlFor="add-member-email">Email address</label>
+        <label htmlFor="add-member-username">Username</label>
 
         <input
           ref={inputRef}
-          id="add-member-email"
-          type="email"
-          value={email}
-          maxLength={254}
-          autoComplete="email"
+          id="add-member-username"
+          value={username}
+          maxLength={20}
           readOnly={isSaving}
-          placeholder="person@example.com"
+          placeholder="username"
           aria-required="true"
           aria-invalid={Boolean(error)}
           aria-describedby={error ? "add-member-error" : undefined}
           onChange={(event) => {
-            setEmail(event.target.value);
+            setUsername(event.target.value);
             setError("");
           }}
         />

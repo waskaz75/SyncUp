@@ -31,14 +31,13 @@ function CommsSidebar({
   activeConversationId,
   onSelect,
   onConversationCreated,
-  onConversationUpdated,
 }) {
   const showPeople = voice.isJoined && voice.screenActive;
   const username = useUser();
   const [composer, setComposer] = useState(null);
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [groupEmails, setGroupEmails] = useState([]);
+  const [usernameInput, setUsernameInput] = useState("");
+  const [groupUsernames, setGroupUsernames] = useState([]);
   const [error, setError] = useState("");
 
   function conversationName(conversation) {
@@ -55,63 +54,46 @@ function CommsSidebar({
     setComposer(type);
     setError("");
     setName("");
-    setEmail("");
-    setGroupEmails([]);
+    setUsernameInput("");
+    setGroupUsernames([]);
   }
 
-  function addGroupEmail() {
-    const nextEmail = email.trim().toLowerCase();
+  function addGroupUsername() {
+    const nextUsername = usernameInput.trim();
 
-    if (!nextEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nextEmail)) {
-      setError("Enter a valid email address.");
+    if (!/^[A-Za-z0-9_]{3,20}$/.test(nextUsername)) {
+      setError("Enter a valid username (3–20 letters, numbers, or underscores).");
       return;
     }
 
-    if (groupEmails.includes(nextEmail)) {
-      setError("That email has already been added.");
+    if (groupUsernames.includes(nextUsername)) {
+      setError("That username has already been added.");
       return;
     }
 
-    setGroupEmails((current) => [...current, nextEmail]);
-    setEmail("");
+    setGroupUsernames((current) => [...current, nextUsername]);
+    setUsernameInput("");
     setError("");
   }
 
   async function handleCreate(event) {
     event.preventDefault();
 
-    if (composer === "group" && groupEmails.length === 0) {
-      setError("Add at least one member email before creating the group.");
+    if (composer === "group" && groupUsernames.length === 0) {
+      setError("Add at least one member username before creating the group.");
       return;
     }
 
     try {
       const conversation =
         composer === "group"
-          ? await createGroup(name, groupEmails)
-          : await createDirectMessage(email.trim());
+          ? await createGroup(name, groupUsernames)
+          : await createDirectMessage(usernameInput.trim());
       onConversationCreated(conversation);
       setComposer(null);
     } catch (createError) {
       console.error("Creating conversation failed:", createError);
       setError(createError.message || "Could not create that conversation.");
-    }
-  }
-
-  async function handleAddMember(event) {
-    event.preventDefault();
-    try {
-      const conversation = await addConversationMember(
-        memberConversationId,
-        memberEmail.trim()
-      );
-      onConversationUpdated(conversation);
-      setMemberConversationId(null);
-      setMemberEmail("");
-      setError("");
-    } catch (addError) {
-      console.error("Adding conversation member failed:", addError);
-      setError(addError.message || "Could not add that member.");
     }
   }
 
@@ -171,38 +153,34 @@ function CommsSidebar({
               )}
               {composer === "group" ? (
                 <>
-                  <label htmlFor="group-member-email">
-                    Add a member by email
+                  <label htmlFor="group-member-username">
+                    Add a member by username
                   </label>
                   <input
-                    id="group-member-email"
-                    type="email"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    placeholder="person@example.com"
-                    aria-label="Group member email address"
-                    autoComplete="email"
+                    id="group-member-username"
+                    value={usernameInput}
+                    onChange={(event) => setUsernameInput(event.target.value)}
+                    placeholder="username"
+                    aria-label="Group member username"
                   />
-                  <button type="button" onClick={addGroupEmail}>
-                    Add email
+                  <button type="button" onClick={addGroupUsername}>
+                    Add username
                   </button>
-                  {groupEmails.length > 0 && (
+                  {groupUsernames.length > 0 && (
                     <ul aria-label="Added group members">
-                      {groupEmails.map((memberEmail) => (
-                        <li key={memberEmail}>{memberEmail}</li>
+                      {groupUsernames.map((memberUsername) => (
+                        <li key={memberUsername}>{memberUsername}</li>
                       ))}
                     </ul>
                   )}
-                  <p>Enter another email to add another person.</p>
+                  <p>Enter another username to add another person.</p>
                 </>
               ) : (
                 <input
-                  type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  placeholder="person@example.com"
-                  aria-label="Person's email address"
-                  autoComplete="email"
+                  value={usernameInput}
+                  onChange={(event) => setUsernameInput(event.target.value)}
+                  placeholder="username"
+                  aria-label="Person's username"
                   required
                 />
               )}

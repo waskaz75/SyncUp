@@ -55,7 +55,7 @@ public class CommsController {
             @RequestBody CreateConversationRequest request)
             throws SQLException {
         return conversationService.createGroup(
-                    authenticated(sessionId), request.name(), request.emails());
+                    authenticated(sessionId), request.name(), request.usernames());
     }
 
     @PostMapping("/direct")
@@ -64,7 +64,7 @@ public class CommsController {
             @RequestBody DirectMessageRequest request)
             throws SQLException {
         return conversationService.createDirect(
-                    authenticated(sessionId), request.email());
+                    authenticated(sessionId), request.username());
     }
 
     @PostMapping("/conversations/{conversationId}/members")
@@ -74,7 +74,7 @@ public class CommsController {
             @RequestBody AddMemberRequest request)
             throws SQLException {
         return conversationService.addMember(
-                authenticated(sessionId), conversationId, request.email());
+                authenticated(sessionId), conversationId, request.username());
     }
 
     @GetMapping("/conversations/{conversationId}/messages")

@@ -53,14 +53,14 @@ public class SignUp {
 
                 // Check whether the username already exists
                 if (errorMessage != null
-                        && errorMessage.contains("users.username")) {
+                        && errorMessage.toLowerCase().contains("username")) {
 
                     return "Username is already taken. Please choose another.";
                 }
 
                 // Check whether the email already exists
                 if (errorMessage != null
-                        && errorMessage.contains("users.email")) {
+                        && errorMessage.toLowerCase().contains("email")) {
 
                     return "Email is already registered. Please use another email.";
                 }

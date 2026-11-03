@@ -49,17 +49,17 @@ public class ConversationRepository {
     }
 
     public Conversation createGroup(
-            UUID creatorId, String name, List<String> emails)
+            UUID creatorId, String name, List<String> usernames)
             throws SQLException {
         if (name == null || name.isBlank() || name.length() > 100) {
             throw new IllegalArgumentException("Group name must contain 1 to 100 characters.");
         }
         Set<UUID> members = new HashSet<>();
-        for (String email : emails == null ? List.<String>of() : emails) {
-            UUID member = findUserByEmail(email);
+        for (String username : usernames == null ? List.<String>of() : usernames) {
+            UUID member = findUserByUsername(username);
             if (member == null) {
                 throw new IllegalArgumentException(
-                        "No registered user was found with email: " + email);
+                        "No registered user was found with username: " + username);
             }
             members.add(member);
         }
@@ -81,14 +81,14 @@ public class ConversationRepository {
         }
     }
 
-    private UUID findUserByEmail(String email) throws SQLException {
-        if (email == null || email.isBlank()) {
+    private UUID findUserByUsername(String username) throws SQLException {
+        if (username == null || username.isBlank()) {
             return null;
         }
         try (Connection connection = JdbcConnector.getConnection();
                 PreparedStatement statement = connection.prepareStatement(
-                        "SELECT user_id FROM users WHERE LOWER(email) = LOWER(?)")) {
-            statement.setString(1, email.trim());
+                        "SELECT user_id FROM users WHERE LOWER(username) = LOWER(?)")) {
+            statement.setString(1, username.trim());
             try (ResultSet results = statement.executeQuery()) {
                 return results.next()
                         ? UUID.fromString(results.getString("user_id"))
@@ -97,12 +97,12 @@ public class ConversationRepository {
         }
     }
 
-    public Conversation createOrFindDirect(UUID creatorId, String email)
+    public Conversation createOrFindDirect(UUID creatorId, String username)
             throws SQLException {
-        UUID otherUser = findUserByEmail(email);
+        UUID otherUser = findUserByUsername(username);
         if (otherUser == null || !userExists(otherUser)) {
             throw new IllegalArgumentException(
-                    "No other registered user was found with that email.");
+                    "No other registered user was found with that username.");
         }
         if (creatorId.equals(otherUser)) {
             throw new IllegalArgumentException(
@@ -157,12 +157,12 @@ public class ConversationRepository {
     }
 
     public Conversation addMember(
-            UUID conversationId, UUID requesterId, String email)
+            UUID conversationId, UUID requesterId, String username)
             throws SQLException {
-        UUID memberId = findUserByEmail(email);
+        UUID memberId = findUserByUsername(username);
         if (memberId == null) {
             throw new IllegalArgumentException(
-                    "No registered user was found with email: " + email);
+                    "No registered user was found with username: " + username);
         }
 
         String roomSql = """

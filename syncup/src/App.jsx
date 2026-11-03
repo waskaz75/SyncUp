@@ -186,6 +186,13 @@ function App() {
       return;
     }
 
+    if (!/^[A-Za-z0-9_]{3,20}$/.test(username)) {
+      setError(
+        "Username must be 3–20 letters, numbers, or underscores."
+      );
+      return;
+    }
+
     if (password.length < 8) {
       setError("Password must contain at least 8 characters.");
       return;

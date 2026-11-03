@@ -23,19 +23,19 @@ public class ConversationService {
     }
 
     public Conversation createGroup(
-            UUID userId, String name, List<String> emails) throws SQLException {
-        return repository.createGroup(userId, name, emails);
+            UUID userId, String name, List<String> usernames) throws SQLException {
+        return repository.createGroup(userId, name, usernames);
     }
 
-    public Conversation createDirect(UUID userId, String email)
+    public Conversation createDirect(UUID userId, String username)
             throws SQLException {
-        return repository.createOrFindDirect(userId, email);
+        return repository.createOrFindDirect(userId, username);
     }
 
     public Conversation addMember(
-            UUID userId, UUID conversationId, String email)
+            UUID userId, UUID conversationId, String username)
             throws SQLException {
-        return repository.addMember(conversationId, userId, email);
+        return repository.addMember(conversationId, userId, username);
     }
 
     public List<ChatMessage> getMessages(UUID userId, UUID conversationId)

@@ -52,9 +52,12 @@ function CommsPage() {
     );
   }
 
-  async function handleAddMember(email) {
+  async function handleAddMember(username) {
     try {
-      const updated = await addConversationMember(activeConversationId, email);
+      const updated = await addConversationMember(
+        activeConversationId,
+        username
+      );
 
       updateConversation(updated);
       setIsAddMemberOpen(false);
@@ -85,7 +88,6 @@ function CommsPage() {
             activeConversationId={activeConversationId}
             onSelect={selectChannel}
             onConversationCreated={addConversation}
-            onConversationUpdated={updateConversation}
           />
 
           <div className="comms-main">

@@ -53,32 +53,32 @@ export async function getConversations() {
   return readResponse(await fetch(buildUrl("/conversations")));
 }
 
-export async function createGroup(name, emails) {
+export async function createGroup(name, usernames) {
   return readResponse(
     await fetch(buildUrl("/conversations"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, emails }),
+      body: JSON.stringify({ name, usernames }),
     })
   );
 }
 
-export async function createDirectMessage(email) {
+export async function createDirectMessage(username) {
   return readResponse(
     await fetch(buildUrl("/direct"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ username }),
     })
   );
 }
 
-export async function addConversationMember(conversationId, email) {
+export async function addConversationMember(conversationId, username) {
   return readResponse(
     await fetch(buildUrl(`/conversations/${conversationId}/members`), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ username }),
     })
   );
 }

@@ -24,11 +24,15 @@ public class WebSocketConfig implements WebSocketConfigurer {
         registry.addHandler(chatHandler, "/ws/comms")
                 .setAllowedOriginPatterns(
                         "http://localhost:*",
+                        "http://127.0.0.1:*",
+                        "http://*:5173",
                         "https://www.syncup-project.com",
                         "https://syncup-project.com");
         registry.addHandler(voiceHandler, "/ws/voice")
                 .setAllowedOriginPatterns(
                         "http://localhost:*",
+                        "http://127.0.0.1:*",
+                        "http://*:5173",
                         "https://www.syncup-project.com",
                         "https://syncup-project.com");
     }

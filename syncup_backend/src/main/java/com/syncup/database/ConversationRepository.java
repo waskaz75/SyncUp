@@ -222,7 +222,7 @@ public class ConversationRepository {
                    p.image_data, p.content_type, m.content, m.sent_at
             FROM messages m
             JOIN users u ON u.user_id = m.user_id
-            LEFT JOIN profile_pictures p ON p.profile_id = u.profile_id
+            LEFT JOIN profile_pictures p ON p.profile_id = u.user_id
             WHERE m.room_id = ?
             ORDER BY m.sent_at ASC
             LIMIT 200
@@ -261,7 +261,7 @@ public class ConversationRepository {
                    p.image_data, p.content_type, m.content, m.sent_at
             FROM messages m
             JOIN users u ON u.user_id = m.user_id
-            LEFT JOIN profile_pictures p ON p.profile_id = u.profile_id
+            LEFT JOIN profile_pictures p ON p.profile_id = u.user_id
             WHERE m.message_id = ?
             """;
         try (Connection connection = JdbcConnector.getConnection();

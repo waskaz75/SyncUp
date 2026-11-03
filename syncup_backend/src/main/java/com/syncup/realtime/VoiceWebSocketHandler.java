@@ -1,10 +1,13 @@
+
 package com.syncup.realtime;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.syncup.auth.SessionManager;
+import com.syncup.database.ConversationRepository;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,17 +22,22 @@ public class VoiceWebSocketHandler extends TextWebSocketHandler {
 
     private final Map<String, WebSocketSession> sessions =
             new ConcurrentHashMap<>();
+
     private final SessionManager sessionManager = new SessionManager();
+    private final ConversationRepository conversationRepository =
+            new ConversationRepository();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session)
             throws Exception {
         UUID userId = authenticate(session);
+
         if (userId == null) {
             session.close(CloseStatus.NOT_ACCEPTABLE);
             return;
         }
+
         session.getAttributes().put("userId", userId.toString());
     }
 
@@ -37,105 +45,206 @@ public class VoiceWebSocketHandler extends TextWebSocketHandler {
     protected void handleTextMessage(
             WebSocketSession session,
             TextMessage message) throws IOException {
+
         JsonNode input = objectMapper.readTree(message.getPayload());
         String type = input.path("type").asText();
         String userId = (String) session.getAttributes().get("userId");
 
+        if (userId == null) {
+            session.close(CloseStatus.NOT_ACCEPTABLE);
+            return;
+        }
+
         if ("join".equals(type)) {
-            session.getAttributes().put("username", input.path("username").asText("Guest"));
+            if (session.getAttributes().containsKey("conversationId")) {
+                sendError(session, "Already joined a voice room.");
+                return;
+            }
+
+            UUID conversationId;
+
+            try {
+                conversationId = UUID.fromString(
+                        input.path("conversationId").asText());
+
+                if (!conversationRepository.isMember(
+                        conversationId, UUID.fromString(userId))) {
+                    sendError(session,
+                            "You are not a member of this conversation.");
+                    return;
+                }
+            } catch (IllegalArgumentException exception) {
+                sendError(session, "A valid conversation ID is required.");
+                return;
+            } catch (SQLException exception) {
+                sendError(session,
+                        "Could not verify conversation membership.");
+                return;
+            }
+
+            WebSocketSession existing = sessions.putIfAbsent(userId, session);
+
+            if (existing != null && existing != session) {
+                sendError(session,
+                        "You are already connected to a voice call.");
+                return;
+            }
+
+            session.getAttributes().put(
+                    "conversationId", conversationId.toString());
+            session.getAttributes().put(
+                    "username", input.path("username").asText("Guest"));
+
             sendParticipants(session);
             broadcastExcept(session, event("peer-joined", userId, session));
             return;
         }
 
+        if (!session.getAttributes().containsKey("conversationId")) {
+            sendError(session, "Join a voice room first.");
+            return;
+        }
+
         if ("leave".equals(type)) {
-            broadcastExcept(session, event("peer-left", userId, session));
+            leaveRoom(session);
             return;
         }
 
         if ("signal".equals(type) || "mute".equals(type)
-                || "screen-start".equals(type) || "screen-stop".equals(type)) {
+                || "screen-start".equals(type)
+                || "screen-stop".equals(type)) {
+
             String target = input.path("target").asText("");
             WebSocketSession recipient = sessions.get(target);
-            if (recipient != null && recipient.isOpen()) {
-                ObjectNode output = input.deepCopy();
-                output.put("from", userId);
-                output.put("username", session.getAttributes()
-                        .getOrDefault("username", "Guest").toString());
+
+            ObjectNode output = input.deepCopy();
+            output.put("from", userId);
+            output.put("username", session.getAttributes()
+                    .getOrDefault("username", "Guest").toString());
+
+            if (recipient != null && recipient.isOpen()
+                    && sameRoom(session, recipient)) {
                 recipient.sendMessage(new TextMessage(
                         objectMapper.writeValueAsString(output)));
             } else if ("mute".equals(type)
                     || "screen-start".equals(type)
                     || "screen-stop".equals(type)) {
-                broadcastExcept(session, input);
+                broadcastExcept(session, output);
             }
         }
     }
 
     @Override
-    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-        String userId = (String) session.getAttributes().get("userId");
-        if (userId != null) {
-            sessions.remove(userId);
-            try {
-                broadcastExcept(session, event("peer-left", userId, session));
-            } catch (IOException ignored) {
-                // The connection is already closed.
-            }
+    public void afterConnectionClosed(
+            WebSocketSession session, CloseStatus status) {
+        try {
+            leaveRoom(session);
+        } catch (IOException ignored) {
+            // The connection is already closed.
         }
     }
 
+    private void leaveRoom(WebSocketSession session) throws IOException {
+        String userId = (String) session.getAttributes().get("userId");
+
+        if (userId == null
+                || !session.getAttributes().containsKey("conversationId")) {
+            return;
+        }
+
+        sessions.remove(userId, session);
+        broadcastExcept(session, event("peer-left", userId, session));
+
+        session.getAttributes().remove("conversationId");
+        session.getAttributes().remove("username");
+    }
+
     private UUID authenticate(WebSocketSession session) {
-        String query = session.getUri() == null ? "" : session.getUri().getQuery();
+        String query = session.getUri() == null
+                ? null : session.getUri().getQuery();
+
         if (query == null || !query.startsWith("sessionId=")) {
             return null;
         }
+
         try {
-            UUID sessionId = UUID.fromString(query.substring("sessionId=".length()));
-            UUID userId = sessionManager.getUserIdFromSession(sessionId);
-            if (userId != null) {
-                sessions.put(userId.toString(), session);
-            }
-            return userId;
+            UUID sessionId = UUID.fromString(
+                    query.substring("sessionId=".length()));
+
+            return sessionManager.getUserIdFromSession(sessionId);
         } catch (IllegalArgumentException exception) {
             return null;
         }
     }
 
-    private void sendParticipants(WebSocketSession recipient) throws IOException {
+    private boolean sameRoom(
+            WebSocketSession first, WebSocketSession second) {
+        Object room = first.getAttributes().get("conversationId");
+
+        return room != null
+                && room.equals(second.getAttributes().get("conversationId"));
+    }
+
+    private void sendParticipants(WebSocketSession recipient)
+            throws IOException {
+
         ObjectNode output = objectMapper.createObjectNode();
         output.put("type", "participants");
+
         var participants = output.putArray("participants");
+
         for (WebSocketSession peer : sessions.values()) {
             if (peer != recipient && peer.isOpen()
+                    && sameRoom(recipient, peer)
                     && peer.getAttributes().containsKey("username")) {
+
                 ObjectNode item = participants.addObject();
                 item.put("id", peer.getAttributes().get("userId").toString());
-                item.put("username", peer.getAttributes().get("username").toString());
+                item.put("username",
+                        peer.getAttributes().get("username").toString());
                 item.put("picture", "");
                 item.put("isMuted", false);
             }
         }
-        recipient.sendMessage(new TextMessage(objectMapper.writeValueAsString(output)));
+
+        recipient.sendMessage(new TextMessage(
+                objectMapper.writeValueAsString(output)));
     }
 
-    private void broadcastExcept(WebSocketSession excluded, JsonNode payload)
+    private void broadcastExcept(
+            WebSocketSession excluded, JsonNode payload)
             throws IOException {
+
         String text = objectMapper.writeValueAsString(payload);
+
         for (WebSocketSession peer : sessions.values()) {
-            if (peer != excluded && peer.isOpen()) {
+            if (peer != excluded && peer.isOpen()
+                    && sameRoom(excluded, peer)) {
                 peer.sendMessage(new TextMessage(text));
             }
         }
     }
 
+    private void sendError(
+            WebSocketSession session, String message) throws IOException {
+
+        ObjectNode output = objectMapper.createObjectNode();
+        output.put("type", "error");
+        output.put("message", message);
+
+        session.sendMessage(new TextMessage(
+                objectMapper.writeValueAsString(output)));
+    }
+
     private ObjectNode event(
             String type, String userId, WebSocketSession session) {
+
         ObjectNode output = objectMapper.createObjectNode();
         output.put("type", type);
         output.put("id", userId);
         output.put("username", session.getAttributes()
                 .getOrDefault("username", "Guest").toString());
+
         return output;
     }
 }

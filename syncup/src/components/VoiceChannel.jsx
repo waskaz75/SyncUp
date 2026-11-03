@@ -1,3 +1,4 @@
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import CommsAvatar from "./commsAvatar";
@@ -29,40 +30,26 @@ function describeMediaError(error, device) {
     return "Your microphone is in use by another app, or your system is blocking it.";
   }
 
+  if (error?.message) {
+    return error.message;
+  }
+
   return device === "microphone"
     ? "Could not start your microphone. Please try again."
     : "Could not start screen sharing. Please try again.";
 }
 
 function getTileSize(count) {
-  if (count <= 1) {
-    return 200;
-  }
-
-  if (count === 2) {
-    return 170;
-  }
-
-  if (count <= 4) {
-    return 140;
-  }
-
-  if (count <= 6) {
-    return 112;
-  }
-
-  if (count <= 9) {
-    return 92;
-  }
-
-  if (count <= 16) {
-    return 76;
-  }
-
+  if (count <= 1) return 200;
+  if (count === 2) return 170;
+  if (count <= 4) return 140;
+  if (count <= 6) return 112;
+  if (count <= 9) return 92;
+  if (count <= 16) return 76;
   return 64;
 }
 
-function VoiceChannel({ onVoiceChange }) {
+function VoiceChannel({ onVoiceChange, conversationId }) {
   const username = useUser();
   const picture = useProfilePicture();
 
@@ -74,6 +61,7 @@ function VoiceChannel({ onVoiceChange }) {
   const remoteVideoRef = useRef(null);
   const mountedRef = useRef(false);
   const joinedRef = useRef(false);
+  const joiningRef = useRef(false);
 
   const [status, setStatus] = useState("idle");
   const [isMuted, setIsMuted] = useState(false);
@@ -82,6 +70,7 @@ function VoiceChannel({ onVoiceChange }) {
   const [error, setError] = useState("");
   const [participants, setParticipants] = useState([]);
   const [remoteScreen, setRemoteScreen] = useState(null);
+  const [joinedConversationId, setJoinedConversationId] = useState(null);
 
   const isJoined = status === "joined";
   const showScreen = isSharing || Boolean(remoteScreen);
@@ -122,7 +111,7 @@ function VoiceChannel({ onVoiceChange }) {
       mountedRef.current = false;
       releaseAll();
 
-      if (joinedRef.current) {
+      if (joinedRef.current || joiningRef.current) {
         joinedRef.current = false;
         leaveVoiceChannel().catch(() => {});
       }
@@ -130,12 +119,19 @@ function VoiceChannel({ onVoiceChange }) {
   }, [releaseAll]);
 
   useEffect(() => {
-    onVoiceChange({
+    onVoiceChange?.({
       isJoined,
+      conversationId: isJoined ? joinedConversationId : null,
       people: isJoined ? everyone : [],
       screenActive: isJoined && showScreen,
     });
-  }, [isJoined, everyone, showScreen, onVoiceChange]);
+  }, [
+    isJoined,
+    joinedConversationId,
+    everyone,
+    showScreen,
+    onVoiceChange,
+  ]);
 
   useEffect(() => {
     if (!isJoined) {
@@ -169,7 +165,8 @@ function VoiceChannel({ onVoiceChange }) {
   }, [remoteScreen]);
 
   function startLevelMeter(stream) {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    const AudioContextClass =
+      window.AudioContext || window.webkitAudioContext;
 
     if (!AudioContextClass) {
       return;
@@ -199,19 +196,29 @@ function VoiceChannel({ onVoiceChange }) {
   }
 
   async function handleJoin() {
-    if (status !== "idle") {
+    if (status !== "idle" || joiningRef.current) {
       return;
     }
 
+    if (!conversationId) {
+      setError("Select a conversation before joining voice.");
+      return;
+    }
+
+    const requestedConversationId = conversationId;
+
     setError("");
     setStatus("joining");
+    joiningRef.current = true;
 
     try {
       if (!navigator.mediaDevices?.getUserMedia) {
         throw new Error("Microphone is not supported here.");
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+      });
 
       if (!mountedRef.current) {
         stream.getTracks().forEach((track) => track.stop());
@@ -220,13 +227,15 @@ function VoiceChannel({ onVoiceChange }) {
 
       micStreamRef.current = stream;
 
-      await joinVoiceChannel(stream);
+      await joinVoiceChannel(stream, requestedConversationId);
 
       if (!mountedRef.current) {
+        await leaveVoiceChannel();
         return;
       }
 
       joinedRef.current = true;
+      setJoinedConversationId(requestedConversationId);
       startLevelMeter(stream);
       setIsMuted(false);
       setStatus("joined");
@@ -239,6 +248,8 @@ function VoiceChannel({ onVoiceChange }) {
         setError(describeMediaError(joinError, "microphone"));
         setStatus("idle");
       }
+    } finally {
+      joiningRef.current = false;
     }
   }
 
@@ -249,7 +260,9 @@ function VoiceChannel({ onVoiceChange }) {
     setIsSharing(false);
     setIsSpeaking(false);
     setIsMuted(false);
+    setJoinedConversationId(null);
     setStatus("idle");
+    setError("");
 
     try {
       await leaveVoiceChannel();
@@ -266,6 +279,7 @@ function VoiceChannel({ onVoiceChange }) {
     });
 
     setIsMuted(nextMuted);
+
     setVoiceMuted(nextMuted).catch((muteError) => {
       console.error("Sharing mute state failed:", muteError);
     });
@@ -276,10 +290,13 @@ function VoiceChannel({ onVoiceChange }) {
       return;
     }
 
-    screenStreamRef.current.getTracks().forEach((track) => track.stop());
-    screenStreamRef.current = null;
+    screenStreamRef.current
+      .getTracks()
+      .forEach((track) => track.stop());
 
+    screenStreamRef.current = null;
     setIsSharing(false);
+
     stopScreenShare().catch((stopError) => {
       console.error("Stopping screen share failed:", stopError);
     });
@@ -304,7 +321,9 @@ function VoiceChannel({ onVoiceChange }) {
 
       screenStreamRef.current = stream;
 
-      stream.getVideoTracks()[0]?.addEventListener("ended", handleStopShare);
+      stream
+        .getVideoTracks()[0]
+        ?.addEventListener("ended", handleStopShare);
 
       await startScreenShare(stream);
 
@@ -314,7 +333,10 @@ function VoiceChannel({ onVoiceChange }) {
     } catch (shareError) {
       console.error("Screen share failed:", shareError);
 
-      screenStreamRef.current?.getTracks().forEach((track) => track.stop());
+      screenStreamRef.current
+        ?.getTracks()
+        .forEach((track) => track.stop());
+
       screenStreamRef.current = null;
 
       if (mountedRef.current) {
@@ -325,15 +347,25 @@ function VoiceChannel({ onVoiceChange }) {
   }
 
   return (
-    <section className="comms-view" aria-labelledby="comms-voice-title">
-        <header
-            className={`comms-view-header ${showScreen ? "visually-hidden" : ""}`}
-        >
-            <h2 id="comms-voice-title">Voice channel</h2>
-        </header>
+    <section
+      className="comms-view"
+      aria-labelledby="comms-voice-title"
+    >
+      <header
+        className={`comms-view-header ${
+          showScreen ? "visually-hidden" : ""
+        }`}
+      >
+        <h2 id="comms-voice-title">
+          {isJoined ? "Voice call" : "Voice channel"}
+        </h2>
+      </header>
 
       {error && (
-        <div className="checklist-banner comms-banner" role="alert">
+        <div
+          className="checklist-banner comms-banner"
+          role="alert"
+        >
           <p>{error}</p>
 
           <button
@@ -351,35 +383,45 @@ function VoiceChannel({ onVoiceChange }) {
         <div className="comms-voice-body">
           <div className="comms-voice-intro">
             <p>
-              Join the voice channel to talk with other people. Your browser
-              will ask for permission to use your microphone.
+              Join this conversation's voice call to talk with
+              other members. Your browser will ask for
+              permission to use your microphone.
             </p>
 
             <button
               type="button"
               className="checklist-button"
               onClick={handleJoin}
-              disabled={status === "joining"}
+              disabled={status === "joining" || !conversationId}
             >
-              {status === "joining" ? "Joining…" : "Join voice"}
+              {status === "joining"
+                ? "Joining…"
+                : "Join voice"}
             </button>
           </div>
         </div>
       ) : (
         <>
           <div
-            className={`comms-voice-body ${showScreen ? "has-screen" : ""}`}
+            className={`comms-voice-body ${
+              showScreen ? "has-screen" : ""
+            }`}
           >
             {!showScreen && (
               <>
-                <p className="comms-voice-count" role="status">
+                <p
+                  className="comms-voice-count"
+                  role="status"
+                >
                   {`In voice (${everyone.length})`}
                 </p>
 
                 <ul
                   className="comms-participants"
                   style={{
-                    "--tile-size": `${getTileSize(everyone.length)}px`,
+                    "--tile-size": `${getTileSize(
+                      everyone.length
+                    )}px`,
                   }}
                 >
                   {everyone.map((person) => (
@@ -402,7 +444,9 @@ function VoiceChannel({ onVoiceChange }) {
                       </span>
 
                       {person.isMuted && (
-                        <span className="comms-participant-state">Muted</span>
+                        <span className="comms-participant-state">
+                          Muted
+                        </span>
                       )}
                     </li>
                   ))}
@@ -418,7 +462,9 @@ function VoiceChannel({ onVoiceChange }) {
 
             {remoteScreen && (
               <figure className="comms-screen">
-                <figcaption>{`${remoteScreen.username} is sharing their screen`}</figcaption>
+                <figcaption>
+                  {`${remoteScreen.username} is sharing their screen`}
+                </figcaption>
 
                 <video
                   ref={remoteVideoRef}
@@ -431,7 +477,6 @@ function VoiceChannel({ onVoiceChange }) {
 
             {isSharing && (
               <figure className="comms-screen">
-
                 <video
                   ref={localVideoRef}
                   autoPlay
@@ -443,7 +488,11 @@ function VoiceChannel({ onVoiceChange }) {
             )}
           </div>
 
-          <div className="comms-controls" role="group" aria-label="Call controls">
+          <div
+            className="comms-controls"
+            role="group"
+            aria-label="Call controls"
+          >
             <button
               type="button"
               className="checklist-button checklist-button-secondary"
@@ -457,7 +506,11 @@ function VoiceChannel({ onVoiceChange }) {
               type="button"
               className="checklist-button checklist-button-secondary"
               aria-pressed={isSharing}
-              onClick={isSharing ? handleStopShare : handleStartShare}
+              onClick={
+                isSharing
+                  ? handleStopShare
+                  : handleStartShare
+              }
             >
               {isSharing ? "Stop sharing" : "Share screen"}
             </button>

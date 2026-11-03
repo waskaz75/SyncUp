@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -218,7 +219,7 @@ public class ConversationRepository {
     public List<ChatMessage> findMessages(UUID conversationId) throws SQLException {
         String sql = """
             SELECT m.message_id, m.room_id, u.username,
-                   COALESCE(p.image_url, '') AS image_url, m.content, m.sent_at
+                   p.image_data, p.content_type, m.content, m.sent_at
             FROM messages m
             JOIN users u ON u.user_id = m.user_id
             LEFT JOIN profile_pictures p ON p.profile_id = u.profile_id
@@ -257,7 +258,7 @@ public class ConversationRepository {
     private ChatMessage findMessage(UUID messageId) throws SQLException {
         String sql = """
             SELECT m.message_id, m.room_id, u.username,
-                   COALESCE(p.image_url, '') AS image_url, m.content, m.sent_at
+                   p.image_data, p.content_type, m.content, m.sent_at
             FROM messages m
             JOIN users u ON u.user_id = m.user_id
             LEFT JOIN profile_pictures p ON p.profile_id = u.profile_id
@@ -358,8 +359,19 @@ public class ConversationRepository {
                 UUID.fromString(results.getString("message_id")),
                 UUID.fromString(results.getString("room_id")),
                 results.getString("username"),
-                results.getString("image_url"),
+                profilePictureDataUrl(
+                        results.getBytes("image_data"),
+                        results.getString("content_type")),
                 results.getString("content"),
                 timestamp == null ? Instant.now() : timestamp.toInstant());
+    }
+
+    private String profilePictureDataUrl(byte[] imageData, String contentType) {
+        if (imageData == null || imageData.length == 0
+                || contentType == null || contentType.isBlank()) {
+            return "";
+        }
+        return "data:" + contentType + ";base64,"
+                + Base64.getEncoder().encodeToString(imageData);
     }
 }

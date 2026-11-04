@@ -28,6 +28,34 @@ body {
   min-height: 100vh;
 }
 
+* {
+  scrollbar-color: color-mix(in srgb, var(--color-brand-accent) 72%, #ffffff)
+    color-mix(in srgb, var(--color-brand-main) 22%, transparent);
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-brand-main) 22%, transparent);
+}
+
+*::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-brand-accent) 72%, #ffffff);
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--color-brand-accent);
+  background-clip: padding-box;
+}
+
 button,
 input {
   font: inherit;

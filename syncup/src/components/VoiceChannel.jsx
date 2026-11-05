@@ -49,7 +49,7 @@ function getTileSize(count) {
   return 64;
 }
 
-function VoiceChannel({ onVoiceChange, conversationId }) {
+function VoiceChannel({ conversationId, onVoiceChange }) {
   const username = useUser();
   const picture = useProfilePicture();
 
@@ -71,6 +71,7 @@ function VoiceChannel({ onVoiceChange, conversationId }) {
   const [participants, setParticipants] = useState([]);
   const [remoteScreen, setRemoteScreen] = useState(null);
   const [joinedConversationId, setJoinedConversationId] = useState(null);
+  const [callId, setCallId] = useState(null);
 
   const isJoined = status === "joined";
   const showScreen = isSharing || Boolean(remoteScreen);
@@ -119,19 +120,13 @@ function VoiceChannel({ onVoiceChange, conversationId }) {
   }, [releaseAll]);
 
   useEffect(() => {
-    onVoiceChange?.({
+    onVoiceChange({
       isJoined,
-      conversationId: isJoined ? joinedConversationId : null,
+      conversationId: isJoined ? callId : null,
       people: isJoined ? everyone : [],
       screenActive: isJoined && showScreen,
     });
-  }, [
-    isJoined,
-    joinedConversationId,
-    everyone,
-    showScreen,
-    onVoiceChange,
-  ]);
+  }, [isJoined, callId, everyone, showScreen, onVoiceChange]);
 
   useEffect(() => {
     if (!isJoined) {
@@ -233,10 +228,11 @@ function VoiceChannel({ onVoiceChange, conversationId }) {
         await leaveVoiceChannel();
         return;
       }
-
+    
       joinedRef.current = true;
-      setJoinedConversationId(requestedConversationId);
+      setCallId(requestedConversationId);
       startLevelMeter(stream);
+      setJoinedConversationId(requestedConversationId);
       setIsMuted(false);
       setStatus("joined");
     } catch (joinError) {
@@ -260,8 +256,9 @@ function VoiceChannel({ onVoiceChange, conversationId }) {
     setIsSharing(false);
     setIsSpeaking(false);
     setIsMuted(false);
-    setJoinedConversationId(null);
+    setCallId(null);
     setStatus("idle");
+    setJoinedConversationId(null);
     setError("");
 
     try {

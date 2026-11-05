@@ -386,17 +386,17 @@ function CommsSidebar({
         >
           <div
             style={{
+              marginTop: "5px",
               display: "flex",
               alignItems: "center",
               gap: "8px",
             }}
           >
             <SpeakerIcon />
-
-            <strong>Voice connected</strong>
+            <strong className="voice-connected">Voice connected</strong>
           </div>
 
-          <p style={{ marginTop: "6px", marginBottom: "8px" }}>
+          <p style={{ marginTop: "10px", marginBottom: "8px", fontSize: "17px", fontWeight: "bold" }}>
             {activeCallConversation
               ? conversationName(activeCallConversation)
               : "Active conversation"}

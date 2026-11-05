@@ -21,7 +21,7 @@ function ChatChannel({
   conversation,
   onAddMember,
   onStartCall,
-  isInCall = false,
+  isInCall,
 }) {
   const username = useUser();
   const myPicture = useProfilePicture();
@@ -228,15 +228,37 @@ function ChatChannel({
               </span>
             </button>
 
-            {conversation.type === "GROUP" && (
+          {conversation.type === "GROUP" && (
+            <button
+              type="button"
+              className="checklist-button comms-add-member"
+              onClick={onAddMember}
+            >
+              + Add member
+            </button>
+          )}
+
+        {/* {conversation && (
+          <div className="comms-chat-header-actions">
               <button
                 type="button"
                 className="checklist-button comms-add-member"
-                onClick={onAddMember}
+                onClick={onStartCall}
               >
-                + Add member
+                {isInCall ? "Return to call" : "Call"}
               </button>
-            )}
+
+              {conversation.type === "GROUP" && (
+                <button
+                  type="button"
+                  className="checklist-button comms-add-member"
+                  onClick={onAddMember}
+                >
+                  + Add member
+                </button>
+              )}
+          </div>
+        )} */}
           </div>
         )}
       </header>

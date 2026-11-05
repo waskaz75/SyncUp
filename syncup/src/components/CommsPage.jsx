@@ -175,47 +175,23 @@ function CommsPage() {
               />
             </div>
 
-            <div
-              className="comms-view-wrap"
-              hidden={!isCallVisible}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: "12px",
-                  padding: "12px 16px",
-                  borderBottom:
-                    "1px solid var(--border-color, #ddd)",
-                }}
-              >
-                <div>
-                  <strong>
-                    {callConversation?.name ||
-                      "Conversation voice call"}
-                  </strong>
-                </div>
+            <div className="comms-view-wrap" hidden={!isCallVisible}>
+              <div className="comms-call-bar">
+                <strong>
+                  {callConversation?.name || "Call"}
+                </strong>
 
                 <button
                   type="button"
-                  className="checklist-button checklist-button-secondary"
+                  className="checklist-button checklist-button-secondary back-to-messages"
                   onClick={closeVoicePanel}
                 >
                   Back to messages
                 </button>
               </div>
-            </div>
 
-            {/*
-              Keep VoiceChannel mounted while switching between
-              messages and voice. Unmounting it would disconnect
-              the call.
-            */}
-            <div
-              className="comms-view-wrap"
-              hidden={!isCallVisible}
-            >
+              {/* Stays mounted while hidden, or leaving the call view
+                  would disconnect the call. */}
               <VoiceChannel
                 conversationId={callConversationId}
                 onVoiceChange={setVoice}

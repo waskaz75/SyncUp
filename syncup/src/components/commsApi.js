@@ -388,6 +388,10 @@ export async function joinVoiceChannel(stream, conversationId) {
       if (message.type === "participants") {
         updateParticipants(message.participants);
 
+        if (message.initiateOffers === false) {
+          return;
+        }
+
         for (const participant of message.participants) {
           const connection = createPeer(participant.id);
 

@@ -70,7 +70,6 @@ function VoiceChannel({ conversationId, onVoiceChange }) {
   const [error, setError] = useState("");
   const [participants, setParticipants] = useState([]);
   const [remoteScreen, setRemoteScreen] = useState(null);
-  const [joinedConversationId, setJoinedConversationId] = useState(null);
   const [callId, setCallId] = useState(null);
 
   const isJoined = status === "joined";
@@ -232,7 +231,6 @@ function VoiceChannel({ conversationId, onVoiceChange }) {
       joinedRef.current = true;
       setCallId(requestedConversationId);
       startLevelMeter(stream);
-      setJoinedConversationId(requestedConversationId);
       setIsMuted(false);
       setStatus("joined");
     } catch (joinError) {
@@ -258,7 +256,6 @@ function VoiceChannel({ conversationId, onVoiceChange }) {
     setIsMuted(false);
     setCallId(null);
     setStatus("idle");
-    setJoinedConversationId(null);
     setError("");
 
     try {

@@ -95,8 +95,9 @@ public class VoiceWebSocketHandler extends TextWebSocketHandler {
             session.getAttributes().put(
                     "username", input.path("username").asText("Guest"));
 
-            sendParticipants(session);
+            sendParticipants(session, true);
             broadcastExcept(session, event("peer-joined", userId, session));
+            broadcastParticipants(session);
             return;
         }
 
@@ -185,11 +186,32 @@ public class VoiceWebSocketHandler extends TextWebSocketHandler {
                 && room.equals(second.getAttributes().get("conversationId"));
     }
 
-    private void sendParticipants(WebSocketSession recipient)
+    private void sendParticipants(
+            WebSocketSession recipient, boolean initiateOffers)
             throws IOException {
 
+        recipient.sendMessage(new TextMessage(
+                objectMapper.writeValueAsString(
+                        participantsEvent(recipient, initiateOffers))));
+    }
+
+    private void broadcastParticipants(WebSocketSession excluded)
+            throws IOException {
+        for (WebSocketSession peer : sessions.values()) {
+            if (peer != excluded && peer.isOpen()
+                    && sameRoom(excluded, peer)) {
+                peer.sendMessage(new TextMessage(
+                        objectMapper.writeValueAsString(
+                                participantsEvent(peer, false))));
+            }
+        }
+    }
+
+    private ObjectNode participantsEvent(
+            WebSocketSession recipient, boolean initiateOffers) {
         ObjectNode output = objectMapper.createObjectNode();
         output.put("type", "participants");
+        output.put("initiateOffers", initiateOffers);
 
         var participants = output.putArray("participants");
 
@@ -207,8 +229,7 @@ public class VoiceWebSocketHandler extends TextWebSocketHandler {
             }
         }
 
-        recipient.sendMessage(new TextMessage(
-                objectMapper.writeValueAsString(output)));
+        return output;
     }
 
     private void broadcastExcept(

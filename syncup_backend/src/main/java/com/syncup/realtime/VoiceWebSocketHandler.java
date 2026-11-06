@@ -125,8 +125,7 @@ public class VoiceWebSocketHandler extends TextWebSocketHandler {
 
             if (recipient != null && recipient.isOpen()
                     && sameRoom(session, recipient)) {
-                recipient.sendMessage(new TextMessage(
-                        objectMapper.writeValueAsString(output)));
+                send(recipient, output);
             } else if ("mute".equals(type)
                     || "screen-start".equals(type)
                     || "screen-stop".equals(type)) {
@@ -190,9 +189,7 @@ public class VoiceWebSocketHandler extends TextWebSocketHandler {
             WebSocketSession recipient, boolean initiateOffers)
             throws IOException {
 
-        recipient.sendMessage(new TextMessage(
-                objectMapper.writeValueAsString(
-                        participantsEvent(recipient, initiateOffers))));
+        send(recipient, participantsEvent(recipient, initiateOffers));
     }
 
     private void broadcastParticipants(WebSocketSession excluded)
@@ -200,9 +197,7 @@ public class VoiceWebSocketHandler extends TextWebSocketHandler {
         for (WebSocketSession peer : sessions.values()) {
             if (peer != excluded && peer.isOpen()
                     && sameRoom(excluded, peer)) {
-                peer.sendMessage(new TextMessage(
-                        objectMapper.writeValueAsString(
-                                participantsEvent(peer, false))));
+                send(peer, participantsEvent(peer, false));
             }
         }
     }
@@ -236,12 +231,10 @@ public class VoiceWebSocketHandler extends TextWebSocketHandler {
             WebSocketSession excluded, JsonNode payload)
             throws IOException {
 
-        String text = objectMapper.writeValueAsString(payload);
-
         for (WebSocketSession peer : sessions.values()) {
             if (peer != excluded && peer.isOpen()
                     && sameRoom(excluded, peer)) {
-                peer.sendMessage(new TextMessage(text));
+                send(peer, payload);
             }
         }
     }
@@ -253,8 +246,22 @@ public class VoiceWebSocketHandler extends TextWebSocketHandler {
         output.put("type", "error");
         output.put("message", message);
 
-        session.sendMessage(new TextMessage(
-                objectMapper.writeValueAsString(output)));
+        send(session, output);
+    }
+
+    private void send(
+            WebSocketSession recipient, JsonNode payload)
+            throws IOException {
+        if (!recipient.isOpen()) {
+            return;
+        }
+
+        synchronized (recipient) {
+            if (recipient.isOpen()) {
+                recipient.sendMessage(new TextMessage(
+                        objectMapper.writeValueAsString(payload)));
+            }
+        }
     }
 
     private ObjectNode event(
